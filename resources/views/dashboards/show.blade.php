@@ -1,204 +1,385 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="fw-black text-dark mb-0">{{ $project->name }} <span class="text-primary ms-2">Analytics</span></h2>
-                <div class="small fw-bold text-muted text-uppercase tracking-wider mt-1" style="font-size: 0.65rem;">Simulation Id: #{{ $project->id }}</div>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('projects.show', $project) }}" class="btn btn-light border fw-bold rounded-3 px-4 py-2">Paramètres</a>
-                <form action="{{ route('simulations.run', $project) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn btn-primary-premium btn-premium shadow">Actualiser les résultats</button>
-                </form>
-            </div>
+        <div>
+            <h1 class="fw-bold mb-0" style="font-size: 1.35rem; letter-spacing: -0.02em;">
+                {{ $project->name }} <span style="color: var(--accent);">&mdash; Analytics</span>
+            </h1>
+            <p class="mb-0 mt-1" style="font-size: 0.8rem; color: var(--text-muted);">
+                Simulation #{{ $project->id }} &middot; {{ ucfirst($project->type) }} &middot; Code {{ $project->code_petrolier }}
+            </p>
         </div>
     </x-slot>
 
-    <div class="container py-4">
-        <!-- KPIs Row -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-3">
-                <div class="kpi-card shadow-sm h-100 border-start border-4 border-primary">
-                    <p class="xsmall fw-black text-muted text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 1px;">VAN (NPV) @ 10%</p>
-                    <h3 class="fw-black text-primary mb-0">{{ number_format(count($cumulativeNPV) > 0 ? end($cumulativeNPV) : 0, 2) }} <span class="small opacity-50">M$</span></h3>
+    <x-slot name="actions">
+        <a href="{{ route('projects.show', $project) }}" class="btn btn-ghost">
+            <i class="bi bi-sliders me-1"></i> Parametres
+        </a>
+        <a href="{{ route('dashboards.state', $project) }}" class="btn btn-ghost">
+            <i class="bi bi-bank2 me-1"></i> Vue Etat
+        </a>
+        <form action="{{ route('simulations.run', $project) }}" method="POST" class="d-inline">
+            @csrf
+            <button type="submit" class="btn btn-accent">
+                <i class="bi bi-arrow-repeat me-1"></i> Actualiser
+            </button>
+        </form>
+    </x-slot>
+
+    @if($cashflows->isEmpty())
+        <div class="card-modern p-5 text-center" style="margin-top: 3rem;">
+            <div style="width: 72px; height: 72px; background: #fef3c7; border-radius: var(--radius-xl); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                <i class="bi bi-lightning-charge" style="font-size: 1.75rem; color: var(--warning);"></i>
+            </div>
+            <h3 class="fw-bold mb-2" style="font-size: 1.25rem;">Aucune simulation</h3>
+            <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 1.5rem; font-size: 0.9rem;">
+                Lancez une simulation pour visualiser les resultats economiques de votre projet.
+            </p>
+            <form action="{{ route('simulations.run', $project) }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-accent px-4 py-2">
+                    <i class="bi bi-lightning-charge-fill me-1"></i> Lancer la Simulation
+                </button>
+            </form>
+        </div>
+    @else
+        @php
+            $totalRevenue = $cashflows->sum('gross_revenue');
+            $totalState = $cashflows->sum('state_share') + $cashflows->sum('petrosen_share');
+            $totalOperator = $cashflows->sum('operator_share') - $cashflows->sum('income_tax');
+            $totalTaxes = $cashflows->sum('income_tax') + $cashflows->sum('royalties') + $cashflows->sum('cel') + $cashflows->sum('export_tax');
+            $npvFinal = count($cumulativeNPV) > 0 ? end($cumulativeNPV) : 0;
+            $totalCapex = $cashflows->sum('capex_total');
+            $totalOpex = $cashflows->sum('opex_total');
+        @endphp
+
+        <!-- KPI Row -->
+        <div class="row g-3 mb-4 animate-in">
+            <div class="col-6 col-xl-2">
+                <div class="kpi-card kpi-blue h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-label">VAN (NPV)</div>
+                            <div class="kpi-value" style="color: var(--accent);">{{ number_format($npvFinal, 1) }}<span class="kpi-unit">M$</span></div>
+                        </div>
+                        <div class="kpi-icon" style="background: var(--accent-light);"><i class="bi bi-graph-up-arrow" style="color: var(--accent);"></i></div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="kpi-card shadow-sm h-100 border-start border-4 border-success">
-                    <p class="xsmall fw-black text-muted text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 1px;">TRI (IRR)</p>
-                    <h3 class="fw-black text-success mb-0">-- <span class="small opacity-50">%</span></h3>
+            <div class="col-6 col-xl-2">
+                <div class="kpi-card kpi-green h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-label">TRI (IRR)</div>
+                            <div class="kpi-value" style="color: var(--success);">{{ $irr !== null ? number_format($irr, 1) : '--' }}<span class="kpi-unit">%</span></div>
+                        </div>
+                        <div class="kpi-icon" style="background: #d1fae5;"><i class="bi bi-percent" style="color: var(--success);"></i></div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="kpi-card shadow-sm h-100 border-start border-4 border-info">
-                    <p class="xsmall fw-black text-muted text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 1px;">Revenue Brut</p>
-                    <h3 class="fw-black text-info mb-0">{{ number_format($cashflows->sum('gross_revenue'), 1) }} <span class="small opacity-50">M$</span></h3>
+            <div class="col-6 col-xl-2">
+                <div class="kpi-card kpi-cyan h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-label">Revenu Brut</div>
+                            <div class="kpi-value" style="color: var(--info);">{{ number_format($totalRevenue, 1) }}<span class="kpi-unit">M$</span></div>
+                        </div>
+                        <div class="kpi-icon" style="background: #cffafe;"><i class="bi bi-cash-stack" style="color: var(--info);"></i></div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="kpi-card shadow-sm h-100 border-start border-4 border-warning">
-                    <p class="xsmall fw-black text-muted text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 1px;">Part Sénégal</p>
-                    <h3 class="fw-black text-warning mb-0">{{ number_format($cashflows->sum('state_share') + $cashflows->sum('petrosen_share'), 1) }} <span class="small opacity-50">M$</span></h3>
+            <div class="col-6 col-xl-2">
+                <div class="kpi-card kpi-amber h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-label">Part Senegal</div>
+                            <div class="kpi-value" style="color: var(--warning);">{{ number_format($totalState, 1) }}<span class="kpi-unit">M$</span></div>
+                        </div>
+                        <div class="kpi-icon" style="background: #fef3c7;"><i class="bi bi-bank" style="color: var(--warning);"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-2">
+                <div class="kpi-card kpi-purple h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-label">Total CAPEX</div>
+                            <div class="kpi-value" style="color: #7c3aed;">{{ number_format($totalCapex, 1) }}<span class="kpi-unit">M$</span></div>
+                        </div>
+                        <div class="kpi-icon" style="background: #ede9fe;"><i class="bi bi-building" style="color: #7c3aed;"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-2">
+                <div class="kpi-card kpi-red h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-label">Total Taxes</div>
+                            <div class="kpi-value" style="color: var(--danger);">{{ number_format($totalTaxes, 1) }}<span class="kpi-unit">M$</span></div>
+                        </div>
+                        <div class="kpi-icon" style="background: #fee2e2;"><i class="bi bi-receipt" style="color: var(--danger);"></i></div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Charts Row -->
-        <div class="row g-4 mb-5">
-            <div class="col-lg-8">
-                <div class="card card-premium p-4 shadow-sm border h-100">
-                    <h5 class="fw-black text-dark mb-4">Profil de Trésorerie annuel (M$)</h5>
-                    <div style="height: 350px;">
+        <div class="row g-3 mb-4">
+            <div class="col-xl-8">
+                <div class="card-modern p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">Profil de Tresorerie Annuel</h6>
+                        <span class="badge-modern badge-blue">M$</span>
+                    </div>
+                    <div style="height: 320px;">
                         <canvas id="cashflowChart"></canvas>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4">
-                <div class="card card-premium p-4 shadow-sm border h-100 text-center">
-                    <h5 class="fw-black text-dark mb-4">Répartition des Revenus (%)</h5>
-                    <div class="d-flex align-items-center justify-content-center" style="height: 250px;">
+            <div class="col-xl-4">
+                <div class="card-modern p-4 h-100">
+                    <h6 class="fw-bold mb-4" style="font-size: 0.9rem;">Repartition des Revenus</h6>
+                    <div class="d-flex align-items-center justify-content-center" style="height: 200px;">
                         <canvas id="distributionChart"></canvas>
                     </div>
-                    <div class="mt-4 text-start">
-                        <div class="d-flex justify-content-between mb-2 small fw-bold">
-                            <span><span class="badge bg-warning p-1 me-1"></span> Sénégal</span>
-                            <span>{{ number_format($cashflows->sum('state_share') + $cashflows->sum('petrosen_share'), 1) }} M$</span>
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 0.8rem;">
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
+                                <span class="fw-semibold">Senegal</span>
+                            </div>
+                            <span class="fw-bold">{{ number_format($totalState, 1) }} M$</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2 small fw-bold">
-                            <span><span class="badge bg-success p-1 me-1"></span> Opérateur</span>
-                            <span>{{ number_format($cashflows->sum('operator_share') - $cashflows->sum('income_tax'), 1) }} M$</span>
+                        <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 0.8rem;">
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                                <span class="fw-semibold">Operateur</span>
+                            </div>
+                            <span class="fw-bold">{{ number_format($totalOperator, 1) }} M$</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center" style="font-size: 0.8rem;">
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6; display: inline-block;"></span>
+                                <span class="fw-semibold">Taxes</span>
+                            </div>
+                            <span class="fw-bold">{{ number_format($totalTaxes, 1) }} M$</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Full Width Chart -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="card card-premium p-4 shadow-sm border">
-                    <h5 class="fw-black text-dark mb-4">Évolution de la Valeur Actuelle Nette (VAN Cumulative)</h5>
-                    <div style="height: 250px;">
-                        <canvas id="npvChart"></canvas>
-                    </div>
-                </div>
+        <!-- NPV Chart -->
+        <div class="card-modern p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">Evolution de la VAN Cumulative</h6>
+                <span class="badge-modern {{ $npvFinal >= 0 ? 'badge-green' : 'badge-amber' }}">
+                    {{ $npvFinal >= 0 ? 'Projet Rentable' : 'VAN Negative' }}
+                </span>
+            </div>
+            <div style="height: 250px;">
+                <canvas id="npvChart"></canvas>
             </div>
         </div>
 
-        <!-- Strategic Table -->
-        <div class="card card-premium shadow border-0 overflow-hidden">
-            <div class="card-header bg-light p-4 border-0 d-flex justify-content-between align-items-center">
-                <h5 class="fw-black text-dark mb-0">Rapport Stratégique Multi-Annuels</h5>
-                <button class="btn btn-white btn-sm border fw-bold">Exporter Excel</button>
+        <!-- Detailed Table -->
+        <div class="card-modern overflow-hidden">
+            <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);" class="d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">
+                    <i class="bi bi-table me-2" style="color: var(--accent);"></i> Rapport Strategique Multi-Annuel
+                </h6>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 table-premium">
+                <table class="table table-modern mb-0">
                     <thead>
                         <tr>
-                            <th class="p-4 border-0">Année</th>
-                            <th class="p-4 border-0 text-end">Rev. Brut (M$)</th>
-                            <th class="p-4 border-0 text-end">Cost Recovery (M$)</th>
-                            <th class="p-4 border-0 text-end">Profit Oil (M$)</th>
-                            <th class="p-4 border-0 text-end">Part Sénégal (M$)</th>
-                            <th class="p-4 border-0 text-end">VAN Cumulative (M$)</th>
+                            <th>Annee</th>
+                            <th class="text-end">Rev. Brut (M$)</th>
+                            <th class="text-end">Redevances (M$)</th>
+                            <th class="text-end">Cost Recovery (M$)</th>
+                            <th class="text-end">Profit Oil (M$)</th>
+                            <th class="text-end">Part Senegal (M$)</th>
+                            <th class="text-end">Part Operateur (M$)</th>
+                            <th class="text-end">Cashflow (M$)</th>
+                            <th class="text-end">VAN Cumul. (M$)</th>
                         </tr>
                     </thead>
-                    <tbody class="border-top-0">
+                    <tbody>
                         @foreach($cashflows as $index => $cf)
                             <tr>
-                                <td class="p-4 border-0 bg-light fw-black text-muted">{{ $cf->year }}</td>
-                                <td class="p-4 border-0 text-end fw-bold">{{ number_format($cf->gross_revenue, 1) }}</td>
-                                <td class="p-4 border-0 text-end fw-bold text-info">{{ number_format($cf->cost_recovery, 1) }}</td>
-                                <td class="p-4 border-0 text-end fw-bold text-success">{{ number_format($cf->profit_oil, 1) }}</td>
-                                <td class="p-4 border-0 text-end fw-bold text-warning">{{ number_format($cf->state_share + $cf->petrosen_share, 1) }}</td>
-                                <td class="p-4 border-0 text-end fw-bold {{ $cumulativeNPV[$index] < 0 ? 'text-danger' : 'text-primary' }}">{{ number_format($cumulativeNPV[$index], 1) }}</td>
+                                <td><span class="badge-modern badge-blue">{{ $cf->year }}</span></td>
+                                <td class="text-end fw-semibold">{{ number_format($cf->gross_revenue, 1) }}</td>
+                                <td class="text-end" style="color: var(--danger);">{{ number_format($cf->royalties, 1) }}</td>
+                                <td class="text-end" style="color: var(--info);">{{ number_format($cf->cost_recovery, 1) }}</td>
+                                <td class="text-end fw-semibold" style="color: var(--success);">{{ number_format($cf->profit_oil, 1) }}</td>
+                                <td class="text-end fw-semibold" style="color: var(--warning);">{{ number_format($cf->state_share + $cf->petrosen_share, 1) }}</td>
+                                <td class="text-end fw-semibold" style="color: var(--success);">{{ number_format($cf->operator_share - $cf->income_tax, 1) }}</td>
+                                <td class="text-end fw-bold {{ $cf->project_cashflow >= 0 ? '' : 'text-danger' }}">{{ number_format($cf->project_cashflow, 1) }}</td>
+                                <td class="text-end fw-bold {{ $cumulativeNPV[$index] >= 0 ? '' : 'text-danger' }}">{{ number_format($cumulativeNPV[$index], 1) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
+                    <tfoot style="border-top: 2px solid var(--border);">
+                        <tr style="font-weight: 700; background: var(--surface-secondary);">
+                            <td class="fw-bold">Total</td>
+                            <td class="text-end">{{ number_format($totalRevenue, 1) }}</td>
+                            <td class="text-end" style="color: var(--danger);">{{ number_format($cashflows->sum('royalties'), 1) }}</td>
+                            <td class="text-end" style="color: var(--info);">{{ number_format($cashflows->sum('cost_recovery'), 1) }}</td>
+                            <td class="text-end" style="color: var(--success);">{{ number_format($cashflows->sum('profit_oil'), 1) }}</td>
+                            <td class="text-end" style="color: var(--warning);">{{ number_format($totalState, 1) }}</td>
+                            <td class="text-end" style="color: var(--success);">{{ number_format($totalOperator, 1) }}</td>
+                            <td class="text-end fw-bold">{{ number_format($cashflows->sum('project_cashflow'), 1) }}</td>
+                            <td class="text-end fw-bold {{ $npvFinal >= 0 ? '' : 'text-danger' }}">{{ number_format($npvFinal, 1) }}</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
-    </div>
+    @endif
 
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         const labels = @json($labels);
+        Chart.defaults.font.family = 'Inter, sans-serif';
+        Chart.defaults.font.weight = '500';
 
-        // Bootstrap Colors
         const colors = {
-            primary: '#2563eb',
+            accent: '#3b82f6',
             success: '#10b981',
             warning: '#f59e0b',
-            info: '#0ea5e9',
+            info: '#06b6d4',
+            purple: '#8b5cf6',
+            danger: '#ef4444',
             slate: '#64748b'
         };
 
-        // 1. Bar Chart
+        // 1. Cash Flow Bar Chart
         new Chart(document.getElementById('cashflowChart'), {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'Brut', data: @json($revenues), backgroundColor: colors.info, borderRadius: 5 },
-                    { label: 'Opérateur', data: @json($netProfits), backgroundColor: colors.success, borderRadius: 5 },
-                    { label: 'Sénégal', data: @json($stateShare), backgroundColor: colors.warning, borderRadius: 5 }
+                    {
+                        label: 'Revenu Brut',
+                        data: @json($revenues),
+                        backgroundColor: 'rgba(6, 182, 212, 0.7)',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    },
+                    {
+                        label: 'Operateur',
+                        data: @json($netProfits),
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    },
+                    {
+                        label: 'Senegal',
+                        data: @json($stateShare),
+                        backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    }
                 ]
             },
-            options: { 
-                responsive: true, 
+            options: {
+                responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold', family: 'Outfit' } } } },
-                scales: { y: { grid: { borderDash: [5, 5] }, beginAtZero: true } }
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, pointStyle: 'circle', padding: 20, font: { size: 12, weight: '600' } }
+                    },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        titleFont: { weight: '700' },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} M$` }
+                    }
+                },
+                scales: {
+                    y: { grid: { color: '#f1f5f9', drawBorder: false }, ticks: { font: { size: 11 } }, beginAtZero: true },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                }
             }
         });
 
-        // 2. NPV Chart
+        // 2. NPV Line Chart
         new Chart(document.getElementById('npvChart'), {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Cumul VAN',
+                    label: 'VAN Cumulative',
                     data: @json($cumulativeNPV),
-                    borderColor: colors.primary,
-                    borderWidth: 4,
-                    tension: 0.3,
-                    fill: true,
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderColor: colors.accent,
+                    borderWidth: 3,
+                    tension: 0.35,
+                    fill: {
+                        target: 'origin',
+                        above: 'rgba(59, 130, 246, 0.08)',
+                        below: 'rgba(239, 68, 68, 0.08)'
+                    },
                     pointRadius: 4,
-                    pointBackgroundColor: '#fff'
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: colors.accent,
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6,
                 }]
             },
-            options: { 
-                responsive: true, 
+            options: {
+                responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { grid: { borderDash: [5, 5] } } }
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: { label: ctx => `VAN: ${ctx.parsed.y.toFixed(1)} M$` }
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: { color: '#f1f5f9', drawBorder: false },
+                        ticks: { font: { size: 11 }, callback: v => v + ' M$' }
+                    },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                }
             }
         });
 
-        // 3. Doughnut
+        // 3. Doughnut Chart
         new Chart(document.getElementById('distributionChart'), {
             type: 'doughnut',
             data: {
-                labels: ['Sénégal', 'Opérateur', 'Taxes'],
+                labels: ['Senegal', 'Operateur', 'Taxes'],
                 datasets: [{
                     data: [
-                        {{ $cashflows->sum('state_share') + $cashflows->sum('petrosen_share') }},
-                        {{ $cashflows->sum('operator_share') }},
-                        {{ $cashflows->sum('income_tax') + $cashflows->sum('royalties') }}
+                        {{ $totalState }},
+                        {{ $totalOperator }},
+                        {{ $totalTaxes }}
                     ],
-                    backgroundColor: [colors.warning, colors.success, colors.primary],
-                    borderWidth: 0
+                    backgroundColor: [colors.warning, colors.success, colors.accent],
+                    borderWidth: 0,
+                    spacing: 2
                 }]
             },
-            options: { 
-                responsive: true, 
+            options: {
+                responsive: true,
                 maintainAspectRatio: false,
-                cutout: '80%',
-                plugins: { legend: { display: false } }
+                cutout: '75%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed.toFixed(1)} M$` }
+                    }
+                }
             }
         });
     </script>

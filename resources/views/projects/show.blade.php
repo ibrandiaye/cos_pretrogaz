@@ -1,144 +1,283 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                <a href="{{ route('projects.index') }}" class="btn btn-light border p-2 rounded-3 me-3">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>
-                </a>
-                <div>
-                    <h2 class="fw-black text-dark mb-0">{{ $project->name }}</h2>
-                    <p class="text-muted small mb-0">{{ ucfirst($project->type) }} / Code {{ $project->code_petrolier }}</p>
-                </div>
-            </div>
-            <div class="d-flex gap-3">
-                <form action="{{ route('simulations.run', $project) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn btn-primary-premium btn-premium shadow d-flex align-items-center">
-                        <svg class="me-2" width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"></path></svg>
-                        Simuler
-                    </button>
-                </form>
-                <a href="{{ route('dashboards.show', $project) }}" class="btn btn-dark btn-premium">Consulter Analytics</a>
+        <div class="d-flex align-items-center gap-3">
+            <a href="{{ route('projects.index') }}" class="btn btn-ghost" style="padding: 0.45rem 0.65rem;">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="fw-bold mb-0" style="font-size: 1.35rem; letter-spacing: -0.02em;">{{ $project->name }}</h1>
+                <p class="mb-0 mt-1" style="font-size: 0.8rem; color: var(--text-muted);">
+                    {{ ucfirst($project->type) }} &middot; Code {{ $project->code_petrolier }} &middot; {{ $project->duration }} ans
+                </p>
             </div>
         </div>
     </x-slot>
 
-    <div class="py-4" x-data="{ tab: 'params' }">
-        <!-- Navigation Onglets Bootstrap Styles -->
-        <div class="bg-white p-2 rounded-4 border shadow-sm mb-4 d-flex gap-2 overflow-auto">
-            <button @click="tab = 'params'" :class="tab === 'params' ? 'btn btn-primary shadow-sm' : 'btn btn-light text-muted border-0'" class="fw-bold px-4 py-3 rounded-3 flex-shrink-0">Paramètres</button>
-            <button @click="tab = 'capex'" :class="tab === 'capex' ? 'btn btn-primary shadow-sm' : 'btn btn-light text-muted border-0'" class="fw-bold px-4 py-3 rounded-3 flex-shrink-0">Investissements (CAPEX)</button>
-            <button @click="tab = 'opex'" :class="tab === 'opex' ? 'btn btn-primary shadow-sm' : 'btn btn-light text-muted border-0'" class="fw-bold px-4 py-3 rounded-3 flex-shrink-0">Exploitation (OPEX)</button>
-            <button @click="tab = 'prod'" :class="tab === 'prod' ? 'btn btn-primary shadow-sm' : 'btn btn-light text-muted border-0'" class="fw-bold px-4 py-3 rounded-3 flex-shrink-0">Production</button>
-            <button @click="tab = 'prices'" :class="tab === 'prices' ? 'btn btn-primary shadow-sm' : 'btn btn-light text-muted border-0'" class="fw-bold px-4 py-3 rounded-3 flex-shrink-0">Macro-économie</button>
+    <x-slot name="actions">
+        <a href="{{ route('dashboards.show', $project) }}" class="btn btn-ghost">
+            <i class="bi bi-graph-up me-1"></i> Analytics
+        </a>
+        <form action="{{ route('simulations.run', $project) }}" method="POST" class="d-inline">
+            @csrf
+            <button type="submit" class="btn btn-accent">
+                <i class="bi bi-lightning-charge-fill me-1"></i> Simuler
+            </button>
+        </form>
+    </x-slot>
+
+    <div x-data="{ tab: 'params' }">
+        <!-- Tab Navigation -->
+        <div class="tab-nav mb-4 overflow-auto">
+            <button @click="tab = 'params'" :class="tab === 'params' ? 'tab-btn active' : 'tab-btn'">
+                <i class="bi bi-gear me-1"></i> Parametres
+            </button>
+            <button @click="tab = 'capex'" :class="tab === 'capex' ? 'tab-btn active' : 'tab-btn'">
+                <i class="bi bi-building me-1"></i> CAPEX
+            </button>
+            <button @click="tab = 'opex'" :class="tab === 'opex' ? 'tab-btn active' : 'tab-btn'">
+                <i class="bi bi-tools me-1"></i> OPEX
+            </button>
+            <button @click="tab = 'prod'" :class="tab === 'prod' ? 'tab-btn active' : 'tab-btn'">
+                <i class="bi bi-droplet-half me-1"></i> Production
+            </button>
+            <button @click="tab = 'prices'" :class="tab === 'prices' ? 'tab-btn active' : 'tab-btn'">
+                <i class="bi bi-currency-dollar me-1"></i> Macro
+            </button>
         </div>
 
-        <div class="card card-premium p-4 shadow-sm border">
+        <div class="card-modern overflow-hidden">
             <form action="{{ route('projects.update-inputs', $project) }}" method="POST">
                 @csrf
-                
+
                 <!-- PARAMS TAB -->
-                <div x-show="tab === 'params'">
+                <div x-show="tab === 'params'" x-transition>
                     <input type="hidden" name="type" value="parameters">
-                    <div class="row g-5 p-3">
-                        <div class="col-lg-4">
-                            <h5 class="fw-black text-dark border-bottom pb-3 mb-4">Fiscalité & Taxes</h5>
-                            <div class="mb-4">
-                                <label class="form-label xsmall fw-black text-muted text-uppercase mb-2" style="font-size: 0.65rem;">IS (Impôt Société) %</label>
-                                <input type="number" step="0.01" name="inputs[0][taux_is]" value="{{ $project->parameter->taux_is }}" class="form-control form-control-lg bg-light border-0 fw-bold py-3 px-4 rounded-4">
+
+                    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface-secondary);">
+                        <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">
+                            <i class="bi bi-gear me-2" style="color: var(--accent);"></i> Parametres Fiscaux & Contractuels
+                        </h6>
+                    </div>
+
+                    <div class="row g-0" style="padding: 1.5rem;">
+                        <!-- Fiscalite -->
+                        <div class="col-lg-4" style="padding-right: 1.5rem;">
+                            <div class="mb-3 pb-3" style="border-bottom: 2px solid var(--accent); display: inline-block;">
+                                <h6 class="fw-bold mb-0" style="font-size: 0.85rem; color: var(--accent);">Fiscalite & Taxes</h6>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label xsmall fw-black text-muted text-uppercase mb-2" style="font-size: 0.65rem;">TVA %</label>
-                                <input type="number" step="0.01" name="inputs[0][tva]" value="{{ $project->parameter->tva }}" class="form-control form-control-lg bg-light border-0 fw-bold py-3 px-4 rounded-4">
+                            <div class="mb-3">
+                                <label class="form-label-modern">IS (Impot Societe) %</label>
+                                <input type="number" step="0.01" name="inputs[0][taux_is]" value="{{ $project->parameter->taux_is }}"
+                                    class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">TVA %</label>
+                                <input type="number" step="0.01" name="inputs[0][tva]" value="{{ $project->parameter->tva }}"
+                                    class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">CEL %</label>
+                                <input type="number" step="0.01" name="inputs[0][cel]" value="{{ $project->parameter->cel }}"
+                                    class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Taxe Export %</label>
+                                <input type="number" step="0.01" name="inputs[0][taxe_export]" value="{{ $project->parameter->taxe_export }}"
+                                    class="form-control form-modern">
                             </div>
                         </div>
-                        <div class="col-lg-4">
-                            <h5 class="fw-black text-dark border-bottom pb-3 mb-4">Contrat</h5>
-                            <div class="mb-4">
-                                <label class="form-label xsmall fw-black text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Redevance Pétrole %</label>
-                                <input type="number" step="0.01" name="inputs[0][redevance_petrole]" value="{{ $project->parameter->redevance_petrole }}" class="form-control form-control-lg bg-light border-0 fw-bold py-3 px-4 rounded-4">
+
+                        <!-- Contrat -->
+                        <div class="col-lg-4" style="padding: 0 1.5rem; border-left: 1px solid var(--border-light); border-right: 1px solid var(--border-light);">
+                            <div class="mb-3 pb-3" style="border-bottom: 2px solid var(--success); display: inline-block;">
+                                <h6 class="fw-bold mb-0" style="font-size: 0.85rem; color: var(--success);">Contrat & Redevances</h6>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label xsmall fw-black text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Plafond Cost Recov. %</label>
-                                <input type="number" step="0.01" name="inputs[0][cost_recovery_ceiling]" value="{{ $project->parameter->cost_recovery_ceiling }}" class="form-control form-control-lg bg-light border-0 fw-bold py-3 px-4 rounded-4">
+                            <div class="mb-3">
+                                <label class="form-label-modern">Redevance Petrole %</label>
+                                <input type="number" step="0.01" name="inputs[0][redevance_petrole]" value="{{ $project->parameter->redevance_petrole }}"
+                                    class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Redevance Gaz %</label>
+                                <input type="number" step="0.01" name="inputs[0][redevance_gaz]" value="{{ $project->parameter->redevance_gaz }}"
+                                    class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Plafond Cost Recovery %</label>
+                                <input type="number" step="0.01" name="inputs[0][cost_recovery_ceiling]" value="{{ $project->parameter->cost_recovery_ceiling }}"
+                                    class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Bonus Signature ($)</label>
+                                <input type="number" step="0.01" name="inputs[0][bonus_signature]" value="{{ $project->parameter->bonus_signature }}"
+                                    class="form-control form-modern">
                             </div>
                         </div>
-                        <div class="col-lg-4">
-                            <h5 class="fw-black text-dark border-bottom pb-3 mb-4">Participations</h5>
-                            <div class="mb-4">
-                                <label class="form-label xsmall fw-black text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Part PETROSEN %</label>
-                                <input type="number" step="0.01" name="inputs[0][petrosen_participation]" value="{{ $project->parameter->petrosen_participation }}" class="form-control form-control-lg bg-light border-0 fw-bold py-3 px-4 rounded-4">
+
+                        <!-- Participations -->
+                        <div class="col-lg-4" style="padding-left: 1.5rem;">
+                            <div class="mb-3 pb-3" style="border-bottom: 2px solid #7c3aed; display: inline-block;">
+                                <h6 class="fw-bold mb-0" style="font-size: 0.85rem; color: #7c3aed;">Participations</h6>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label xsmall fw-black text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Discount Rate (VAN) %</label>
-                                <input type="number" step="0.01" name="inputs[0][discount_rate]" value="{{ $project->parameter->discount_rate }}" class="form-control form-control-lg bg-light border-0 fw-bold py-3 px-4 rounded-4">
+                            <div class="mb-3">
+                                <label class="form-label-modern">Part PETROSEN %</label>
+                                <input type="number" step="0.01" name="inputs[0][petrosen_participation]" value="{{ $project->parameter->petrosen_participation }}"
+                                    class="form-control form-modern">
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Part Etat (Carried Interest) %</label>
+                                <input type="number" step="0.01" name="inputs[0][state_participation]" value="{{ $project->parameter->state_participation }}"
+                                    class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Discount Rate (VAN) %</label>
+                                <input type="number" step="0.01" name="inputs[0][discount_rate]" value="{{ $project->parameter->discount_rate }}"
+                                    class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Taxe Carbone ($/tonne)</label>
+                                <input type="number" step="0.01" name="inputs[0][taxe_carbone]" value="{{ $project->parameter->taxe_carbone }}"
+                                    class="form-control form-modern">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PETROSEN Loan Section -->
+                    <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); background: var(--surface-secondary);">
+                        <h6 class="fw-bold mb-0" style="font-size: 0.85rem;">
+                            <i class="bi bi-bank me-2" style="color: var(--warning);"></i> Financement PETROSEN
+                        </h6>
+                    </div>
+                    <div class="row" style="padding: 1.5rem;">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Montant Pret ($)</label>
+                            <input type="number" step="0.01" name="inputs[0][petrosen_loan_amount]" value="{{ $project->parameter->petrosen_loan_amount }}"
+                                class="form-control form-modern">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Taux Interet %</label>
+                            <input type="number" step="0.01" name="inputs[0][petrosen_interest_rate]" value="{{ $project->parameter->petrosen_interest_rate }}"
+                                class="form-control form-modern">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Grace (annees)</label>
+                            <input type="number" name="inputs[0][petrosen_grace_period]" value="{{ $project->parameter->petrosen_grace_period }}"
+                                class="form-control form-modern">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Maturite (annees)</label>
+                            <input type="number" name="inputs[0][petrosen_maturity]" value="{{ $project->parameter->petrosen_maturity }}"
+                                class="form-control form-modern">
                         </div>
                     </div>
                 </div>
 
-                <!-- DYNAMIC TABS -->
-                <div x-show="['capex', 'opex', 'prod', 'prices'].includes(tab)">
-                    <input type="hidden" name="type" :value="tab">
-                    <div class="table-responsive rounded-4 border">
-                        <table class="table table-hover align-middle mb-0 table-premium">
-                            <thead class="bg-light">
+                <!-- DYNAMIC DATA TABS -->
+                @php
+                    $tabConfigs = [
+                        'capex' => [
+                            'label' => 'Investissements (CAPEX)',
+                            'icon' => 'bi-building',
+                            'color' => 'var(--accent)',
+                            'collection' => 'capexes',
+                            'fields' => [
+                                'exploration' => ['label' => 'Exploration (M$)', 'step' => '0.01'],
+                                'development' => ['label' => 'Developpement (M$)', 'step' => '0.01'],
+                                'pipeline_fpso' => ['label' => 'Pipeline/FPSO (M$)', 'step' => '0.01'],
+                                'installations' => ['label' => 'Installations (M$)', 'step' => '0.01'],
+                                'divers' => ['label' => 'Divers (M$)', 'step' => '0.01'],
+                            ]
+                        ],
+                        'opex' => [
+                            'label' => 'Exploitation (OPEX)',
+                            'icon' => 'bi-tools',
+                            'color' => 'var(--success)',
+                            'collection' => 'opexes',
+                            'fields' => [
+                                'exploitation' => ['label' => 'Exploitation (M$)', 'step' => '0.01'],
+                                'maintenance' => ['label' => 'Maintenance (M$)', 'step' => '0.01'],
+                                'location' => ['label' => 'Location (M$)', 'step' => '0.01'],
+                            ]
+                        ],
+                        'prod' => [
+                            'label' => 'Production',
+                            'icon' => 'bi-droplet-half',
+                            'color' => 'var(--warning)',
+                            'collection' => 'productions',
+                            'fields' => [
+                                'oil' => ['label' => 'Petrole (Mbbl)', 'step' => '0.001'],
+                                'gas' => ['label' => 'Gaz (Bcf)', 'step' => '0.001'],
+                                'gnl' => ['label' => 'GNL (MT)', 'step' => '0.001'],
+                            ]
+                        ],
+                        'prices' => [
+                            'label' => 'Macro-economie',
+                            'icon' => 'bi-currency-dollar',
+                            'color' => '#7c3aed',
+                            'collection' => 'prices',
+                            'fields' => [
+                                'oil_price' => ['label' => 'Brent ($/bbl)', 'step' => '0.01'],
+                                'gas_price' => ['label' => 'Gaz ($/MMBTU)', 'step' => '0.01'],
+                                'gnl_price' => ['label' => 'GNL ($/MMBTU)', 'step' => '0.01'],
+                                'inflation' => ['label' => 'Inflation %', 'step' => '0.01'],
+                                'exchange_rate' => ['label' => 'FCFA/USD', 'step' => '0.0001'],
+                            ]
+                        ],
+                    ];
+                @endphp
+
+                @foreach($tabConfigs as $tabKey => $config)
+                <div x-show="tab === '{{ $tabKey }}'" x-transition>
+                    <input type="hidden" name="type" value="{{ $tabKey === 'prod' ? 'production' : ($tabKey === 'prices' ? 'price' : $tabKey) }}">
+
+                    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface-secondary);">
+                        <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">
+                            <i class="bi {{ $config['icon'] }} me-2" style="color: {{ $config['color'] }};"></i> {{ $config['label'] }}
+                        </h6>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-modern mb-0">
+                            <thead>
                                 <tr>
-                                    <th class="p-4 border-0">Année</th>
-                                    <template x-if="tab === 'capex'">
-                                        <th class="p-4 border-0">Exploration (M$)</th><th class="p-4 border-0">Développement (M$)</th><th class="p-4 border-0">Unités Prod (M$)</th><th class="p-4 border-0">Divers (M$)</th>
-                                    </template>
-                                    <template x-if="tab === 'opex'">
-                                        <th class="p-4 border-0">Exploitation (M$)</th><th class="p-4 border-0">Maintenance (M$)</th><th class="p-4 border-0">Location (M$)</th>
-                                    </template>
-                                    <template x-if="tab === 'prod'">
-                                        <th class="p-4 border-0">Pétrole (Mbbl)</th><th class="p-4 border-0">Gaz (Bcf)</th><th class="p-4 border-0">LNG (MT)</th>
-                                    </template>
-                                    <template x-if="tab === 'prices'">
-                                        <th class="p-4 border-0">Brent ($)</th><th class="p-4 border-0">Gaz ($)</th><th class="p-4 border-0">LNG ($)</th><th class="p-4 border-0">Inflation %</th>
-                                    </template>
+                                    <th style="width: 80px;">Annee</th>
+                                    @foreach($config['fields'] as $field => $fieldConfig)
+                                        <th class="text-end">{{ $fieldConfig['label'] }}</th>
+                                    @endforeach
                                 </tr>
                             </thead>
                             <tbody>
                                 @for($y = 1; $y <= $project->duration; $y++)
+                                    @php $item = $project->{$config['collection']}->firstWhere('year', $y); @endphp
                                     <tr>
-                                        <td class="p-4 border-0 bg-light fw-black text-muted">{{ $y }}</td>
-                                        <template x-if="tab === 'capex'">
-                                            @php $item = $project->capexes->firstWhere('year', $y); @endphp
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][exploration]" value="{{ $item->exploration }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][development]" value="{{ $item->development }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][pipeline_fpso]" value="{{ $item->pipeline_fpso }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][divers]" value="{{ $item->divers }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                        </template>
-                                        <template x-if="tab === 'opex'">
-                                            @php $item = $project->opexes->firstWhere('year', $y); @endphp
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][exploitation]" value="{{ $item->exploitation }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][maintenance]" value="{{ $item->maintenance }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][location]" value="{{ $item->location }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                        </template>
-                                        <template x-if="tab === 'prod'">
-                                            @php $item = $project->productions->firstWhere('year', $y); @endphp
-                                            <td class="p-2 border-0"><input type="number" step="0.001" name="inputs[{{$y}}][oil]" value="{{ $item->oil }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                            <td class="p-2 border-0"><input type="number" step="0.001" name="inputs[{{$y}}][gas]" value="{{ $item->gas }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                            <td class="p-2 border-0"><input type="number" step="0.001" name="inputs[{{$y}}][gnl]" value="{{ $item->gnl }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                        </template>
-                                        <template x-if="tab === 'prices'">
-                                            @php $item = $project->prices->firstWhere('year', $y); @endphp
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][oil_price]" value="{{ $item->oil_price }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][gas_price]" value="{{ $item->gas_price }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][gnl_price]" value="{{ $item->gnl_price }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                            <td class="p-2 border-0"><input type="number" step="0.01" name="inputs[{{$y}}][inflation]" value="{{ $item->inflation }}" class="form-control border-0 bg-transparent fw-bold shadow-none"></td>
-                                        </template>
+                                        <td>
+                                            <span class="badge-modern badge-blue">{{ $y }}</span>
+                                        </td>
+                                        @foreach($config['fields'] as $field => $fieldConfig)
+                                            <td class="text-end">
+                                                <input type="number" step="{{ $fieldConfig['step'] }}"
+                                                    name="inputs[{{ $y }}][{{ $field }}]"
+                                                    value="{{ $item->$field ?? 0 }}"
+                                                    class="form-control form-modern text-end"
+                                                    style="max-width: 140px; display: inline-block; padding: 0.4rem 0.6rem; font-size: 0.85rem;">
+                                            </td>
+                                        @endforeach
                                     </tr>
                                 @endfor
                             </tbody>
                         </table>
                     </div>
                 </div>
+                @endforeach
 
-                <div class="mt-5 border-top pt-4 d-flex justify-content-between align-items-center">
-                    <p class="text-muted small italic mb-0">Note : L'actualisation des calculs nécessite de "Lancer la Simulation" après avoir sauvegardé vos données.</p>
-                    <button type="submit" class="btn btn-primary-premium btn-premium px-5 py-3 shadow">Sauvegarder l'onglet</button>
+                <!-- Footer -->
+                <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); background: var(--surface-secondary);" class="d-flex justify-content-between align-items-center">
+                    <p class="mb-0" style="font-size: 0.8rem; color: var(--text-muted);">
+                        <i class="bi bi-info-circle me-1"></i> Sauvegardez puis lancez la simulation pour actualiser les calculs
+                    </p>
+                    <button type="submit" class="btn btn-accent">
+                        <i class="bi bi-check-lg me-1"></i> Sauvegarder
+                    </button>
                 </div>
             </form>
         </div>

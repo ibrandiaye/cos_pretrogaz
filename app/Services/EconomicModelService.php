@@ -226,6 +226,15 @@ class EconomicModelService
         ];
     }
 
+    /**
+     * Public accessor for IRR calculation (used by DashboardController).
+     */
+    public function getIRR(array $cashflows): ?float
+    {
+        $irr = $this->calculateIRR($cashflows);
+        return $irr !== null ? round($irr * 100, 2) : null;
+    }
+
     // ----------------------------------------------------------------
     //  PRIVATE HELPERS
     // ----------------------------------------------------------------

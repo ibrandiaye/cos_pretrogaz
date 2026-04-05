@@ -27,18 +27,6 @@ Route::middleware('auth')->group(function () {
     // Dashboards
     Route::get('projects/{project}/dashboard', [\App\Http\Controllers\DashboardController::class, 'show'])->name('dashboards.show');
     Route::get('projects/{project}/dashboard/state', [\App\Http\Controllers\DashboardController::class, 'state'])->name('dashboards.state');
-
-    // Projects
-    Route::resource('projects', \App\Http\Controllers\ProjectController::class);
-    Route::post('projects/{project}/inputs', [\App\Http\Controllers\ProjectController::class, 'updateInputs'])->name('projects.update-inputs');
-
-    // Simulations
-    Route::post('projects/{project}/simulate', [\App\Http\Controllers\SimulationController::class, 'run'])->name('simulations.run');
-    Route::get('projects/{project}/scenarios', [\App\Http\Controllers\SimulationController::class, 'multiScenario'])->name('simulations.scenarios');
-
-    // Dashboards
-    Route::get('projects/{project}/dashboard', [\App\Http\Controllers\DashboardController::class, 'show'])->name('dashboards.show');
-    Route::get('projects/{project}/dashboard/state', [\App\Http\Controllers\DashboardController::class, 'state'])->name('dashboards.state');
 });
 
 require __DIR__.'/auth.php';
