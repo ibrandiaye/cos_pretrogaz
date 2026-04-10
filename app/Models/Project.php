@@ -43,6 +43,11 @@ class Project extends Model
         return $this->hasMany(Price::class)->orderBy('year');
     }
 
+    public function abexes(): HasMany
+    {
+        return $this->hasMany(Abex::class)->orderBy('year');
+    }
+
     public function cashflows(): HasMany
     {
         return $this->hasMany(Cashflow::class)->orderBy('year');

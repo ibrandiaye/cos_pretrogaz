@@ -14,7 +14,7 @@ class Cashflow extends Model
         'profit_oil', 'r_factor',
         'state_share', 'petrosen_share', 'operator_share',
         'income_tax', 'cel', 'export_tax',
-        'capex_total', 'opex_total', 'project_cashflow', 'discounted_cashflow',
+        'capex_total', 'opex_total', 'abex_total', 'project_cashflow', 'discounted_cashflow',
     ];
 
     public function project(): BelongsTo { return $this->belongsTo(Project::class); }

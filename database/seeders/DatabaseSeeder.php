@@ -54,7 +54,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Production (Mbbl/an pour petrole, Bcf/an pour gaz, MT/an pour GNL)
-        // Phase exploration: annees 1-3, ramp-up: 4-6, plateau: 7-12, decline: 13-20
         $production = [
             1  => ['oil' => 0,     'gas' => 0,    'gnl' => 0],
             2  => ['oil' => 0,     'gas' => 0,    'gnl' => 0],
@@ -78,53 +77,61 @@ class DatabaseSeeder extends Seeder
             20 => ['oil' => 6.0,   'gas' => 0.5,  'gnl' => 0],
         ];
 
-        // CAPEX (M$) - Gros investissement en phase exploration/developpement
+        // CAPEX Details (M$) - Colonnes du fichier Excel "Details Capex"
+        // exploration, etudes_pre_fid, forage_completion, installations_sous_marines, pipeline, installations_surface, owners_cost, imprevus
         $capex = [
-            1  => ['exploration' => 150, 'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 20],
-            2  => ['exploration' => 80,  'development' => 350,  'pipeline_fpso' => 500,  'installations' => 200, 'divers' => 50],
-            3  => ['exploration' => 30,  'development' => 600,  'pipeline_fpso' => 800,  'installations' => 350, 'divers' => 80],
-            4  => ['exploration' => 0,   'development' => 200,  'pipeline_fpso' => 150,  'installations' => 100, 'divers' => 30],
-            5  => ['exploration' => 0,   'development' => 50,   'pipeline_fpso' => 0,    'installations' => 30,  'divers' => 15],
-            6  => ['exploration' => 0,   'development' => 20,   'pipeline_fpso' => 0,    'installations' => 15,  'divers' => 10],
-            7  => ['exploration' => 0,   'development' => 10,   'pipeline_fpso' => 0,    'installations' => 10,  'divers' => 5],
-            8  => ['exploration' => 0,   'development' => 10,   'pipeline_fpso' => 0,    'installations' => 5,   'divers' => 5],
-            9  => ['exploration' => 0,   'development' => 5,    'pipeline_fpso' => 0,    'installations' => 5,   'divers' => 5],
-            10 => ['exploration' => 0,   'development' => 5,    'pipeline_fpso' => 0,    'installations' => 5,   'divers' => 5],
-            11 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 5,   'divers' => 5],
-            12 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 5,   'divers' => 5],
-            13 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 5],
-            14 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 5],
-            15 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 5],
-            16 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 5],
-            17 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 3],
-            18 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 3],
-            19 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 2],
-            20 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 50],
+            1  => ['exploration' => 150, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 20],
+            2  => ['exploration' => 80,  'etudes_pre_fid' => 50,  'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 50],
+            3  => ['exploration' => 30,  'etudes_pre_fid' => 80,  'forage_completion' => 200, 'installations_sous_marines' => 180, 'pipeline' => 100, 'installations_surface' => 280, 'owners_cost' => 20, 'imprevus' => 80],
+            4  => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 245, 'installations_sous_marines' => 230, 'pipeline' => 121, 'installations_surface' => 357, 'owners_cost' => 25, 'imprevus' => 30],
+            5  => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 156, 'installations_sous_marines' => 156, 'pipeline' => 0,   'installations_surface' => 300, 'owners_cost' => 18, 'imprevus' => 15],
+            6  => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 10],
+            7  => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 5],
+            8  => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 5],
+            9  => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 5],
+            10 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 5],
+            11 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 5],
+            12 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 5],
+            13 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 5],
+            14 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 5],
+            15 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 5],
+            16 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 5],
+            17 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 3],
+            18 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 3],
+            19 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 2],
+            20 => ['exploration' => 0,   'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 50],
         ];
 
-        // OPEX (M$) - Couts operationnels croissants avec la production
+        // OPEX Details (M$) - Colonnes du fichier Excel "Details Opex"
+        // location_flng, location_fpso, opex_puits, maintenance_installations, autres_opex
         $opex = [
-            1  => ['exploitation' => 5,   'maintenance' => 2,   'location' => 0],
-            2  => ['exploitation' => 10,  'maintenance' => 5,   'location' => 15],
-            3  => ['exploitation' => 25,  'maintenance' => 10,  'location' => 30],
-            4  => ['exploitation' => 60,  'maintenance' => 25,  'location' => 45],
-            5  => ['exploitation' => 85,  'maintenance' => 35,  'location' => 50],
-            6  => ['exploitation' => 95,  'maintenance' => 40,  'location' => 50],
-            7  => ['exploitation' => 100, 'maintenance' => 42,  'location' => 50],
-            8  => ['exploitation' => 102, 'maintenance' => 45,  'location' => 50],
-            9  => ['exploitation' => 100, 'maintenance' => 45,  'location' => 50],
-            10 => ['exploitation' => 98,  'maintenance' => 48,  'location' => 50],
-            11 => ['exploitation' => 95,  'maintenance' => 50,  'location' => 48],
-            12 => ['exploitation' => 90,  'maintenance' => 48,  'location' => 45],
-            13 => ['exploitation' => 85,  'maintenance' => 45,  'location' => 42],
-            14 => ['exploitation' => 80,  'maintenance' => 42,  'location' => 40],
-            15 => ['exploitation' => 72,  'maintenance' => 38,  'location' => 38],
-            16 => ['exploitation' => 65,  'maintenance' => 35,  'location' => 35],
-            17 => ['exploitation' => 55,  'maintenance' => 30,  'location' => 30],
-            18 => ['exploitation' => 45,  'maintenance' => 25,  'location' => 25],
-            19 => ['exploitation' => 35,  'maintenance' => 20,  'location' => 20],
-            20 => ['exploitation' => 25,  'maintenance' => 15,  'location' => 15],
+            1  => ['location_flng' => 0, 'location_fpso' => 0,  'opex_puits' => 0,  'maintenance_installations' => 2,  'autres_opex' => 5],
+            2  => ['location_flng' => 0, 'location_fpso' => 15, 'opex_puits' => 0,  'maintenance_installations' => 5,  'autres_opex' => 10],
+            3  => ['location_flng' => 0, 'location_fpso' => 30, 'opex_puits' => 5,  'maintenance_installations' => 10, 'autres_opex' => 20],
+            4  => ['location_flng' => 0, 'location_fpso' => 45, 'opex_puits' => 10, 'maintenance_installations' => 25, 'autres_opex' => 50],
+            5  => ['location_flng' => 0, 'location_fpso' => 50, 'opex_puits' => 5,  'maintenance_installations' => 35, 'autres_opex' => 35],
+            6  => ['location_flng' => 0, 'location_fpso' => 50, 'opex_puits' => 5,  'maintenance_installations' => 40, 'autres_opex' => 35],
+            7  => ['location_flng' => 0, 'location_fpso' => 50, 'opex_puits' => 0,  'maintenance_installations' => 42, 'autres_opex' => 35],
+            8  => ['location_flng' => 0, 'location_fpso' => 50, 'opex_puits' => 0,  'maintenance_installations' => 45, 'autres_opex' => 35],
+            9  => ['location_flng' => 0, 'location_fpso' => 50, 'opex_puits' => 0,  'maintenance_installations' => 45, 'autres_opex' => 35],
+            10 => ['location_flng' => 0, 'location_fpso' => 50, 'opex_puits' => 0,  'maintenance_installations' => 48, 'autres_opex' => 35],
+            11 => ['location_flng' => 0, 'location_fpso' => 48, 'opex_puits' => 0,  'maintenance_installations' => 50, 'autres_opex' => 35],
+            12 => ['location_flng' => 0, 'location_fpso' => 45, 'opex_puits' => 15, 'maintenance_installations' => 48, 'autres_opex' => 35],
+            13 => ['location_flng' => 0, 'location_fpso' => 42, 'opex_puits' => 0,  'maintenance_installations' => 45, 'autres_opex' => 35],
+            14 => ['location_flng' => 0, 'location_fpso' => 40, 'opex_puits' => 0,  'maintenance_installations' => 42, 'autres_opex' => 35],
+            15 => ['location_flng' => 0, 'location_fpso' => 38, 'opex_puits' => 0,  'maintenance_installations' => 38, 'autres_opex' => 35],
+            16 => ['location_flng' => 0, 'location_fpso' => 35, 'opex_puits' => 0,  'maintenance_installations' => 35, 'autres_opex' => 35],
+            17 => ['location_flng' => 0, 'location_fpso' => 30, 'opex_puits' => 0,  'maintenance_installations' => 30, 'autres_opex' => 35],
+            18 => ['location_flng' => 0, 'location_fpso' => 25, 'opex_puits' => 0,  'maintenance_installations' => 25, 'autres_opex' => 35],
+            19 => ['location_flng' => 0, 'location_fpso' => 20, 'opex_puits' => 0,  'maintenance_installations' => 20, 'autres_opex' => 35],
+            20 => ['location_flng' => 0, 'location_fpso' => 15, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 25],
         ];
+
+        // ABEX (M$) - Couts d'abandon (tous a zero pour Sangomar Phase 1)
+        $abex = [];
+        for ($y = 1; $y <= 20; $y++) {
+            $abex[$y] = ['cout_abandon' => 0];
+        }
 
         // Prix macro (prix realistes avec legere inflation)
         $prices = [
@@ -154,19 +161,20 @@ class DatabaseSeeder extends Seeder
         for ($y = 1; $y <= 20; $y++) {
             $p1->capexes()->create(array_merge(['year' => $y], $capex[$y]));
             $p1->opexes()->create(array_merge(['year' => $y], $opex[$y]));
+            $p1->abexes()->create(array_merge(['year' => $y], $abex[$y]));
             $p1->productions()->create(array_merge(['year' => $y], $production[$y]));
             $p1->prices()->create(array_merge(['year' => $y], $prices[$y]));
         }
 
-        // ══════════════════════════════════════════
-        // PROJET 2 : Grand Tortue Ahmeyim GTA (GNL)
-        // ══════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════════════
+        // PROJET 2 : Projet GNL (donnees du fichier Excel de modelisation)
+        // ══════════════════════════════════════════════════════════════════
         $p2 = $user->projects()->create([
             'name' => 'Grand Tortue Ahmeyim (GTA)',
             'code_petrolier' => '2019',
-            'duration' => 20,
+            'duration' => 30,
             'type' => 'offshore',
-            'description' => 'Projet GNL transfrontalier Senegal-Mauritanie. Production de gaz naturel et GNL. Capacite 2.5 MTPA Phase 1.',
+            'description' => 'Projet GNL transfrontalier Senegal-Mauritanie. Production de gaz naturel et GNL. Donnees issues du fichier Excel de modelisation.',
         ]);
 
         $p2->parameter()->create([
@@ -189,82 +197,130 @@ class DatabaseSeeder extends Seeder
             'discount_rate' => 10,
         ]);
 
-        // GTA: principalement gaz + GNL
+        // Production du fichier Excel "Calcul production" (30 ans)
+        // Petrole (Mbbl/an), Gaz domestique (Tbtu/an → Bcf), GNL (MTPA)
         $p2Production = [
-            1  => ['oil' => 0, 'gas' => 0,    'gnl' => 0],
-            2  => ['oil' => 0, 'gas' => 0,    'gnl' => 0],
-            3  => ['oil' => 0, 'gas' => 0,    'gnl' => 0],
-            4  => ['oil' => 0, 'gas' => 5.0,  'gnl' => 0.5],
-            5  => ['oil' => 0, 'gas' => 15.0, 'gnl' => 1.5],
-            6  => ['oil' => 0, 'gas' => 25.0, 'gnl' => 2.5],
-            7  => ['oil' => 0, 'gas' => 28.0, 'gnl' => 2.5],
-            8  => ['oil' => 0, 'gas' => 28.0, 'gnl' => 2.5],
-            9  => ['oil' => 0, 'gas' => 27.0, 'gnl' => 2.5],
-            10 => ['oil' => 0, 'gas' => 26.0, 'gnl' => 2.4],
-            11 => ['oil' => 0, 'gas' => 25.0, 'gnl' => 2.3],
-            12 => ['oil' => 0, 'gas' => 24.0, 'gnl' => 2.2],
-            13 => ['oil' => 0, 'gas' => 22.0, 'gnl' => 2.0],
-            14 => ['oil' => 0, 'gas' => 20.0, 'gnl' => 1.8],
-            15 => ['oil' => 0, 'gas' => 18.0, 'gnl' => 1.6],
-            16 => ['oil' => 0, 'gas' => 16.0, 'gnl' => 1.4],
-            17 => ['oil' => 0, 'gas' => 14.0, 'gnl' => 1.2],
-            18 => ['oil' => 0, 'gas' => 12.0, 'gnl' => 1.0],
-            19 => ['oil' => 0, 'gas' => 10.0, 'gnl' => 0.8],
-            20 => ['oil' => 0, 'gas' => 8.0,  'gnl' => 0.5],
+            1  => ['oil' => 1.095,  'gas' => 116.62, 'gnl' => 2.113],
+            2  => ['oil' => 0.73,   'gas' => 97.18,  'gnl' => 1.761],
+            3  => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            4  => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            5  => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            6  => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            7  => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            8  => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            9  => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            10 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            11 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            12 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            13 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            14 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            15 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            16 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            17 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            18 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            19 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            20 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            21 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            22 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            23 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            24 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            25 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            26 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            27 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            28 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            29 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
+            30 => ['oil' => 0,      'gas' => 0,      'gnl' => 0],
         ];
 
+        // CAPEX Details du fichier Excel "Details Capex" (30 ans)
         $p2Capex = [
-            1  => ['exploration' => 120, 'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 15],
-            2  => ['exploration' => 60,  'development' => 200,  'pipeline_fpso' => 400,  'installations' => 300, 'divers' => 40],
-            3  => ['exploration' => 20,  'development' => 500,  'pipeline_fpso' => 900,  'installations' => 600, 'divers' => 100],
-            4  => ['exploration' => 0,   'development' => 300,  'pipeline_fpso' => 200,  'installations' => 150, 'divers' => 50],
-            5  => ['exploration' => 0,   'development' => 80,   'pipeline_fpso' => 50,   'installations' => 30,  'divers' => 20],
-            6  => ['exploration' => 0,   'development' => 20,   'pipeline_fpso' => 0,    'installations' => 15,  'divers' => 10],
-            7  => ['exploration' => 0,   'development' => 10,   'pipeline_fpso' => 0,    'installations' => 10,  'divers' => 5],
-            8  => ['exploration' => 0,   'development' => 5,    'pipeline_fpso' => 0,    'installations' => 5,   'divers' => 5],
-            9  => ['exploration' => 0,   'development' => 5,    'pipeline_fpso' => 0,    'installations' => 5,   'divers' => 5],
-            10 => ['exploration' => 0,   'development' => 5,    'pipeline_fpso' => 0,    'installations' => 5,   'divers' => 5],
-            11 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 5,   'divers' => 3],
-            12 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 5,   'divers' => 3],
-            13 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 3],
-            14 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 3],
-            15 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 3],
-            16 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 3],
-            17 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 2],
-            18 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 2],
-            19 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 2],
-            20 => ['exploration' => 0,   'development' => 0,    'pipeline_fpso' => 0,    'installations' => 0,   'divers' => 30],
+            1  => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            2  => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            3  => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            4  => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            5  => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            6  => ['exploration' => 0, 'etudes_pre_fid' => 110, 'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            7  => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 245, 'installations_sous_marines' => 230, 'pipeline' => 121, 'installations_surface' => 357, 'owners_cost' => 25, 'imprevus' => 0],
+            8  => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 156, 'pipeline' => 450, 'installations_surface' => 300, 'owners_cost' => 18, 'imprevus' => 0],
+            9  => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            10 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            11 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            12 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            13 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            14 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            15 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            16 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            17 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            18 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            19 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            20 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            21 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            22 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            23 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            24 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            25 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            26 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            27 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            28 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            29 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
+            30 => ['exploration' => 0, 'etudes_pre_fid' => 0,   'forage_completion' => 0,   'installations_sous_marines' => 0,   'pipeline' => 0,   'installations_surface' => 0,   'owners_cost' => 0,  'imprevus' => 0],
         ];
 
+        // OPEX Details du fichier Excel "Details Opex" (30 ans)
         $p2Opex = [
-            1  => ['exploitation' => 3,   'maintenance' => 1,   'location' => 0],
-            2  => ['exploitation' => 8,   'maintenance' => 3,   'location' => 10],
-            3  => ['exploitation' => 15,  'maintenance' => 8,   'location' => 25],
-            4  => ['exploitation' => 40,  'maintenance' => 18,  'location' => 35],
-            5  => ['exploitation' => 70,  'maintenance' => 30,  'location' => 45],
-            6  => ['exploitation' => 90,  'maintenance' => 38,  'location' => 50],
-            7  => ['exploitation' => 95,  'maintenance' => 40,  'location' => 50],
-            8  => ['exploitation' => 95,  'maintenance' => 42,  'location' => 50],
-            9  => ['exploitation' => 92,  'maintenance' => 42,  'location' => 48],
-            10 => ['exploitation' => 90,  'maintenance' => 40,  'location' => 48],
-            11 => ['exploitation' => 85,  'maintenance' => 40,  'location' => 45],
-            12 => ['exploitation' => 82,  'maintenance' => 38,  'location' => 42],
-            13 => ['exploitation' => 75,  'maintenance' => 35,  'location' => 40],
-            14 => ['exploitation' => 68,  'maintenance' => 32,  'location' => 38],
-            15 => ['exploitation' => 60,  'maintenance' => 28,  'location' => 35],
-            16 => ['exploitation' => 52,  'maintenance' => 25,  'location' => 30],
-            17 => ['exploitation' => 45,  'maintenance' => 22,  'location' => 28],
-            18 => ['exploitation' => 38,  'maintenance' => 18,  'location' => 22],
-            19 => ['exploitation' => 30,  'maintenance' => 15,  'location' => 18],
-            20 => ['exploitation' => 22,  'maintenance' => 12,  'location' => 12],
+            1  => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            2  => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            3  => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            4  => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            5  => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 5,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            6  => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 5,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            7  => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            8  => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            9  => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            10 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            11 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            12 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 15, 'maintenance_installations' => 15, 'autres_opex' => 35],
+            13 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            14 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            15 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            16 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            17 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            18 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            19 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            20 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 15, 'autres_opex' => 35],
+            21 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            22 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            23 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            24 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            25 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            26 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            27 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            28 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            29 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
+            30 => ['location_flng' => 0, 'location_fpso' => 0, 'opex_puits' => 0,  'maintenance_installations' => 0,  'autres_opex' => 0],
         ];
 
-        // GTA utilise les memes prix macro
-        for ($y = 1; $y <= 20; $y++) {
+        // ABEX du fichier Excel "Details Abex" (tous a zero)
+        $p2Abex = [];
+        for ($y = 1; $y <= 30; $y++) {
+            $p2Abex[$y] = ['cout_abandon' => 0];
+        }
+
+        // Prix macro pour GTA (30 ans)
+        $p2Prices = [];
+        for ($y = 1; $y <= 30; $y++) {
+            $baseYear = min($y, 20);
+            $p2Prices[$y] = $prices[$baseYear] ?? [
+                'oil_price' => 68, 'gas_price' => 2.8, 'gnl_price' => 9, 'inflation' => 2.0, 'exchange_rate' => 650,
+            ];
+        }
+
+        for ($y = 1; $y <= 30; $y++) {
             $p2->capexes()->create(array_merge(['year' => $y], $p2Capex[$y]));
             $p2->opexes()->create(array_merge(['year' => $y], $p2Opex[$y]));
+            $p2->abexes()->create(array_merge(['year' => $y], $p2Abex[$y]));
             $p2->productions()->create(array_merge(['year' => $y], $p2Production[$y]));
-            $p2->prices()->create(array_merge(['year' => $y], $prices[$y]));
+            $p2->prices()->create(array_merge(['year' => $y], $p2Prices[$y]));
         }
     }
 }

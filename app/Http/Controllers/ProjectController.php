@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Parameter;
 use App\Models\Capex;
 use App\Models\Opex;
+use App\Models\Abex;
 use App\Models\Production;
 use App\Models\Price;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class ProjectController extends Controller
     {
         $user = Auth::user();
         $projects = $user ? $user->projects : collect();
-        
+
         return view('projects.index', compact('projects'));
     }
 
@@ -54,6 +55,7 @@ class ProjectController extends Controller
         for ($y = 1; $y <= $project->duration; $y++) {
             $project->capexes()->create(['year' => $y]);
             $project->opexes()->create(['year' => $y]);
+            $project->abexes()->create(['year' => $y]);
             $project->productions()->create(['year' => $y]);
             $project->prices()->create(['year' => $y]);
         }
@@ -64,14 +66,14 @@ class ProjectController extends Controller
     public function show(Project $project)
     {
         $this->authorizeAccess($project);
-        $project->load(['parameter', 'capexes', 'opexes', 'productions', 'prices']);
+        $project->load(['parameter', 'capexes', 'opexes', 'abexes', 'productions', 'prices']);
         return view('projects.show', compact('project'));
     }
 
     public function updateInputs(Request $request, Project $project)
     {
         $this->authorizeAccess($project);
-        
+
         $type = $request->input('type');
         $inputs = $request->input('inputs', []);
 
@@ -85,6 +87,9 @@ class ProjectController extends Controller
                     break;
                 case 'opex':
                     $project->opexes()->where('year', $year)->update($data);
+                    break;
+                case 'abex':
+                    $project->abexes()->where('year', $year)->update($data);
                     break;
                 case 'production':
                     $project->productions()->where('year', $year)->update($data);

@@ -30,6 +30,7 @@ class EconomicModelService
         $params = $project->parameter;
         $capexes = $project->capexes->keyBy('year');
         $opexes = $project->opexes->keyBy('year');
+        $abexes = $project->abexes->keyBy('year');
         $productions = $project->productions->keyBy('year');
         $prices = $project->prices->keyBy('year');
 
@@ -52,11 +53,13 @@ class EconomicModelService
         for ($y = 1; $y <= $project->duration; $y++) {
             $capex = $capexes->get($y);
             $opex = $opexes->get($y);
+            $abex = $abexes->get($y);
             $production = $productions->get($y);
             $price = $prices->get($y);
 
             $capexTotal = $capex ? $capex->total() : 0;
             $opexTotal = $opex ? $opex->total() : 0;
+            $abexTotal = $abex ? $abex->total() : 0;
 
             // Apply scenario overrides (price/production multipliers)
             $oilPriceMult = $overrides['oil_price_mult'] ?? 1.0;
@@ -89,7 +92,7 @@ class EconomicModelService
             $netRevenue = $grossRevenue - $royalties - $exportTax;
 
             // === 3. COST RECOVERY ===
-            $currentYearCosts = $capexTotal + $opexTotal;
+            $currentYearCosts = $capexTotal + $opexTotal + $abexTotal;
             $cumulativeCost += $currentYearCosts;
             $recoverableCosts = $cumulativeCost; // simplified (all costs recoverable)
             $crCeiling = $netRevenue * (float) $params->cost_recovery_ceiling / 100;
@@ -140,7 +143,7 @@ class EconomicModelService
             }
 
             // === 9. PROJECT CASHFLOW (Operator perspective) ===
-            $projectCashflow = $operatorNet - $capexTotal - $opexTotal * (1 - $petrosenParticipation);
+            $projectCashflow = $operatorNet - $capexTotal - $abexTotal - $opexTotal * (1 - $petrosenParticipation);
 
             // === 10. DISCOUNTED CASHFLOW ===
             $discountFactor = 1 / pow(1 + $discountRate, $y);
@@ -166,6 +169,7 @@ class EconomicModelService
                 'export_tax' => round($exportTax, 2),
                 'capex_total' => round($capexTotal, 2),
                 'opex_total' => round($opexTotal, 2),
+                'abex_total' => round($abexTotal, 2),
                 'project_cashflow' => round($projectCashflow, 2),
                 'discounted_cashflow' => round($discountedCashflow, 2),
             ];

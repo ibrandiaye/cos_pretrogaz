@@ -8,21 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('opexes', function (Blueprint $table) {
+        Schema::create('abexes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->integer('year');
-            $table->decimal('location_flng', 15, 2)->default(0);
-            $table->decimal('location_fpso', 15, 2)->default(0);
-            $table->decimal('opex_puits', 15, 2)->default(0);
-            $table->decimal('maintenance_installations', 15, 2)->default(0);
-            $table->decimal('autres_opex', 15, 2)->default(0);
+            $table->decimal('cout_abandon', 15, 2)->default(0);
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('opexes');
+        Schema::dropIfExists('abexes');
     }
 };

@@ -13,10 +13,13 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->integer('year');
             $table->decimal('exploration', 15, 2)->default(0);
-            $table->decimal('development', 15, 2)->default(0);
-            $table->decimal('pipeline_fpso', 15, 2)->default(0);
-            $table->decimal('installations', 15, 2)->default(0);
-            $table->decimal('divers', 15, 2)->default(0);
+            $table->decimal('etudes_pre_fid', 15, 2)->default(0);
+            $table->decimal('forage_completion', 15, 2)->default(0);
+            $table->decimal('installations_sous_marines', 15, 2)->default(0);
+            $table->decimal('pipeline', 15, 2)->default(0);
+            $table->decimal('installations_surface', 15, 2)->default(0);
+            $table->decimal('owners_cost', 15, 2)->default(0);
+            $table->decimal('imprevus', 15, 2)->default(0);
             $table->timestamps();
         });
     }

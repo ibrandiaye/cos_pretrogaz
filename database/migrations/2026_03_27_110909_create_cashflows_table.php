@@ -34,6 +34,7 @@ return new class extends Migration
             // Project cashflows
             $table->decimal('capex_total', 15, 2)->default(0);
             $table->decimal('opex_total', 15, 2)->default(0);
+            $table->decimal('abex_total', 15, 2)->default(0);
             $table->decimal('project_cashflow', 15, 2)->default(0);
             $table->decimal('discounted_cashflow', 15, 2)->default(0);
             $table->timestamps();

@@ -46,6 +46,9 @@
             <button @click="tab = 'opex'" :class="tab === 'opex' ? 'tab-btn active' : 'tab-btn'">
                 <i class="bi bi-tools me-1"></i> OPEX
             </button>
+            <button @click="tab = 'abex'" :class="tab === 'abex' ? 'tab-btn active' : 'tab-btn'">
+                <i class="bi bi-x-octagon me-1"></i> ABEX
+            </button>
             <button @click="tab = 'prod'" :class="tab === 'prod' ? 'tab-btn active' : 'tab-btn'">
                 <i class="bi bi-droplet-half me-1"></i> Production
             </button>
@@ -191,10 +194,13 @@
                             'collection' => 'capexes',
                             'fields' => [
                                 'exploration' => ['label' => 'Exploration (M$)', 'step' => '0.01'],
-                                'development' => ['label' => 'Developpement (M$)', 'step' => '0.01'],
-                                'pipeline_fpso' => ['label' => 'Pipeline/FPSO (M$)', 'step' => '0.01'],
-                                'installations' => ['label' => 'Installations (M$)', 'step' => '0.01'],
-                                'divers' => ['label' => 'Divers (M$)', 'step' => '0.01'],
+                                'etudes_pre_fid' => ['label' => 'Etudes Pre-FID (M$)', 'step' => '0.01'],
+                                'forage_completion' => ['label' => 'Forage & Completion (M$)', 'step' => '0.01'],
+                                'installations_sous_marines' => ['label' => 'Inst. Sous-Marines (M$)', 'step' => '0.01'],
+                                'pipeline' => ['label' => 'Pipeline(s) (M$)', 'step' => '0.01'],
+                                'installations_surface' => ['label' => 'Inst. Surface (M$)', 'step' => '0.01'],
+                                'owners_cost' => ['label' => 'Owners Cost (M$)', 'step' => '0.01'],
+                                'imprevus' => ['label' => 'Imprevus (M$)', 'step' => '0.01'],
                             ]
                         ],
                         'opex' => [
@@ -203,9 +209,20 @@
                             'color' => 'var(--success)',
                             'collection' => 'opexes',
                             'fields' => [
-                                'exploitation' => ['label' => 'Exploitation (M$)', 'step' => '0.01'],
-                                'maintenance' => ['label' => 'Maintenance (M$)', 'step' => '0.01'],
-                                'location' => ['label' => 'Location (M$)', 'step' => '0.01'],
+                                'location_flng' => ['label' => 'Location FLNG (M$)', 'step' => '0.01'],
+                                'location_fpso' => ['label' => 'Location FPSO (M$)', 'step' => '0.01'],
+                                'opex_puits' => ['label' => 'Opex Puits (M$)', 'step' => '0.01'],
+                                'maintenance_installations' => ['label' => 'Maintenance Inst. (M$)', 'step' => '0.01'],
+                                'autres_opex' => ['label' => 'Autres Opex (M$)', 'step' => '0.01'],
+                            ]
+                        ],
+                        'abex' => [
+                            'label' => 'Abandon (ABEX)',
+                            'icon' => 'bi-x-octagon',
+                            'color' => '#dc3545',
+                            'collection' => 'abexes',
+                            'fields' => [
+                                'cout_abandon' => ['label' => 'Cout Abandon (M$)', 'step' => '0.01'],
                             ]
                         ],
                         'prod' => [
