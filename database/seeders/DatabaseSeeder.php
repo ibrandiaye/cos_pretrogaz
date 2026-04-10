@@ -12,6 +12,9 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        // ── Codes Petroliers ──
+        $this->call(PetroleumCodeSeeder::class);
+
         // ── Utilisateur ──
         $user = User::firstOrCreate(
             ['email' => 'admin@cos-petrogaz.sn'],

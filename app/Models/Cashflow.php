@@ -14,6 +14,7 @@ class Cashflow extends Model
         'profit_oil', 'r_factor',
         'state_share', 'petrosen_share', 'operator_share',
         'income_tax', 'cel', 'export_tax',
+        'wht_dividendes', 'business_license_tax', 'depreciation',
         'capex_total', 'opex_total', 'project_cashflow', 'discounted_cashflow',
     ];
 

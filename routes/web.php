@@ -16,6 +16,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Petroleum Codes
+    Route::resource('petroleum-codes', \App\Http\Controllers\PetroleumCodeController::class);
+    Route::post('petroleum-codes/{petroleum_code}/duplicate', [\App\Http\Controllers\PetroleumCodeController::class, 'duplicate'])->name('petroleum-codes.duplicate');
+
     // Projects
     Route::resource('projects', \App\Http\Controllers\ProjectController::class);
     Route::post('projects/{project}/inputs', [\App\Http\Controllers\ProjectController::class, 'updateInputs'])->name('projects.update-inputs');

@@ -3,27 +3,13 @@
 namespace App\Services;
 
 use App\Models\Project;
+use App\Models\PetroleumCode;
 use App\Models\Cashflow;
-use Illuminate\Support\Collection;
 
 class EconomicModelService
 {
-    // R-factor tranches from Article 23 of 2019 Petroleum Code (Senegal)
-    private const R_FACTOR_TRANCHES_2019 = [
-        ['max' => 1.0, 'state' => 0.40, 'contractors' => 0.60],
-        ['max' => 2.0, 'state' => 0.45, 'contractors' => 0.55],
-        ['max' => 3.0, 'state' => 0.55, 'contractors' => 0.45],
-        ['max' => PHP_FLOAT_MAX, 'state' => 0.60, 'contractors' => 0.40],
-    ];
-
-    // Fixed tranches for 1998 code (simplified)
-    private const FIXED_TRANCHES_1998 = [
-        ['max' => PHP_FLOAT_MAX, 'state' => 0.50, 'contractors' => 0.50],
-    ];
-
     /**
      * Run a full simulation for a project, optionally with overridden prices/production.
-     * Returns array of yearly cashflow data and summary metrics.
      */
     public function runSimulation(Project $project, array $overrides = [], string $scenario = 'base'): array
     {
@@ -37,17 +23,52 @@ class EconomicModelService
             return ['error' => 'Missing parameters'];
         }
 
+        // Load petroleum code config (dynamic)
+        $petroleumCode = $project->petroleumCode;
+        if (!$petroleumCode) {
+            // Fallback: try to match by code_petrolier string
+            $petroleumCode = PetroleumCode::where('short_name', $project->code_petrolier)->first();
+        }
+        if (!$petroleumCode) {
+            return ['error' => 'Missing petroleum code configuration'];
+        }
+        $petroleumCode->load('tranches');
+
+        $blocType = $params->bloc_type ?? 'offshore_profond';
+
+        // Get rates from petroleum code
+        $royaltyOilRate = $petroleumCode->getRoyaltyOilRate($blocType) / 100;
+        $royaltyGasRate = (float) $petroleumCode->royalty_gas_rate / 100;
+        $costRecoveryCeiling = $petroleumCode->getCostRecoveryCeiling($blocType);
+        $exportTaxRate = (float) $petroleumCode->taxe_export / 100;
+        $celRate = (float) $petroleumCode->cel / 100;
+        $bltRate = (float) $petroleumCode->business_license_tax / 100;
+        $isRate = (float) $petroleumCode->taux_is / 100;
+        $whtRate = (float) $petroleumCode->wht_dividendes / 100;
+
         $yearlyCashflows = [];
         $cumulativeRevenue = 0;
         $cumulativeCost = 0;
         $npv = 0;
         $discountRate = (float) $params->discount_rate / 100;
+        $petrosenParticipation = (float) $params->petrosen_participation / 100;
 
         // Petrosen loan tracking
         $petrosenLoanBalance = (float) $params->petrosen_loan_amount;
         $petrosenInterestRate = (float) $params->petrosen_interest_rate / 100;
         $petrosenGrace = (int) $params->petrosen_grace_period;
         $petrosenMaturity = (int) $params->petrosen_maturity;
+        $petrosenCapitalizedInterest = 0;
+
+        // Depreciation tracking
+        $depreciationSchedule = [];
+        $depExploration = (int) $petroleumCode->depreciation_exploration;
+        $depInstallations = (int) $petroleumCode->depreciation_installations;
+        $depPipelineFpso = (int) $petroleumCode->depreciation_pipeline_fpso;
+
+        // NOL carry-forward tracking
+        $nolYears = (int) $petroleumCode->nol_years;
+        $nolCarryForward = [];
 
         for ($y = 1; $y <= $project->duration; $y++) {
             $capex = $capexes->get($y);
@@ -58,7 +79,7 @@ class EconomicModelService
             $capexTotal = $capex ? $capex->total() : 0;
             $opexTotal = $opex ? $opex->total() : 0;
 
-            // Apply scenario overrides (price/production multipliers)
+            // Apply scenario overrides
             $oilPriceMult = $overrides['oil_price_mult'] ?? 1.0;
             $gasPriceMult = $overrides['gas_price_mult'] ?? 1.0;
             $productionMult = $overrides['production_mult'] ?? 1.0;
@@ -69,85 +90,146 @@ class EconomicModelService
 
             $oilPrice = $price ? (float) $price->oil_price * $oilPriceMult : 0;
             $gasPrice = $price ? (float) $price->gas_price * $gasPriceMult : 0;
-            $gnlPrice = $price ? (float) $price->gnl_price : 0;
+            $gnlPrice = $price ? (float) $price->gnl_price * $gasPriceMult : 0;
 
             // === 1. GROSS REVENUES ===
-            // Note: production in Mbbl → revenue in M$
             $revenueOil = $oilProd * $oilPrice;
-            $revenueGas = $gasProd * $gasPrice * 1000; // Bcf → MMBTU (×1000)
-            $revenueGnl = $gnlProd * $gnlPrice * 1000;
+            $revenueGas = $gasProd * $gasPrice;
+            $revenueGnl = $gnlProd * $gnlPrice * 52; // 52 MMBTU/tonne
             $grossRevenue = $revenueOil + $revenueGas + $revenueGnl;
 
-            // === 2. ROYALTIES & TAXES BEFORE COST RECOVERY ===
-            $royaltyPetrol = $grossRevenue > 0 ? ($revenueOil / $grossRevenue) * (float) $params->redevance_petrole / 100 * $grossRevenue : 0;
-            $royaltyGaz = $grossRevenue > 0 ? (($revenueGas + $revenueGnl) / $grossRevenue) * (float) $params->redevance_gaz / 100 * $grossRevenue : 0;
+            // === 2. ROYALTIES ===
+            $royaltyPetrol = $revenueOil * $royaltyOilRate;
+            $royaltyGaz = ($revenueGas + $revenueGnl) * $royaltyGasRate;
             $royalties = $royaltyPetrol + $royaltyGaz;
 
-            $exportTax = $grossRevenue * (float) $params->taxe_export / 100;
-            $celTax = $grossRevenue * (float) $params->cel / 100;
-
+            // === 3. TAXES BEFORE COST RECOVERY ===
+            $exportTax = $grossRevenue * $exportTaxRate;
+            $celTax = $grossRevenue * $celRate;
+            $businessLicenseTax = $grossRevenue * $bltRate;
             $netRevenue = $grossRevenue - $royalties - $exportTax;
 
-            // === 3. COST RECOVERY ===
-            $currentYearCosts = $capexTotal + $opexTotal;
-            $cumulativeCost += $currentYearCosts;
-            $recoverableCosts = $cumulativeCost; // simplified (all costs recoverable)
-            $crCeiling = $netRevenue * (float) $params->cost_recovery_ceiling / 100;
-            $costRecovery = min($recoverableCosts, $crCeiling);
-            $cumulativeCost -= $costRecovery; // reduce carried costs by what was recovered
+            // === 4. DEPRECIATION ===
+            if ($capex && $capexTotal > 0) {
+                $exploration = (float) ($capex->exploration ?? 0);
+                $development = (float) ($capex->development ?? 0);
+                $pipelineFpso = (float) ($capex->pipeline_fpso ?? 0);
+                $installations = (float) ($capex->installations ?? 0);
+                $divers = (float) ($capex->divers ?? 0);
 
-            // === 4. PROFIT OIL ===
-            $profitOil = max(0, $netRevenue - $costRecovery);
-
-            // === 5. R-FACTOR (Code 2019 only) ===
-            $rFactor = null;
-            if ($project->code_petrolier === '2019' && $cumulativeCost > 0) {
-                $rFactor = $cumulativeRevenue / max(1, $cumulativeCost + $capexTotal);
+                if ($exploration > 0) {
+                    $depreciationSchedule[] = ['amount' => $exploration, 'start_year' => $y, 'duration' => $depExploration];
+                }
+                if ($development > 0) {
+                    $depreciationSchedule[] = ['amount' => $development, 'start_year' => $y, 'duration' => $depInstallations];
+                }
+                if ($pipelineFpso > 0) {
+                    $depreciationSchedule[] = ['amount' => $pipelineFpso, 'start_year' => $y, 'duration' => $depPipelineFpso];
+                }
+                if ($installations > 0) {
+                    $depreciationSchedule[] = ['amount' => $installations, 'start_year' => $y, 'duration' => $depInstallations];
+                }
+                if ($divers > 0) {
+                    $depreciationSchedule[] = ['amount' => $divers, 'start_year' => $y, 'duration' => $depInstallations];
+                }
             }
 
-            // === 6. PROFIT OIL SPLIT ===
-            [$stateShare, $contractorShare] = $this->getProfitOilSplit(
-                $profitOil,
-                $project->code_petrolier,
-                $rFactor
-            );
+            $yearlyDepreciation = 0;
+            foreach ($depreciationSchedule as $item) {
+                if ($y >= $item['start_year'] && $y < $item['start_year'] + $item['duration']) {
+                    $yearlyDepreciation += $item['amount'] / $item['duration'];
+                }
+            }
 
-            // PETROSEN's share of contractor portion
-            $petrosenParticipation = (float) $params->petrosen_participation / 100;
+            // === 5. COST RECOVERY ===
+            $currentYearCosts = $capexTotal + $opexTotal;
+            $cumulativeCost += $currentYearCosts;
+            $crCeiling = $netRevenue * $costRecoveryCeiling / 100;
+            $costRecovery = min($cumulativeCost, max(0, $crCeiling));
+            $cumulativeCost -= $costRecovery;
+
+            // === 6. PROFIT OIL ===
+            $profitOil = max(0, $netRevenue - $costRecovery);
+
+            // === 7. PROFIT OIL SPLIT (dynamic from PetroleumCode) ===
+            $cumulativeRevenue += $grossRevenue;
+            $rFactor = null;
+
+            if ($petroleumCode->profit_split_method === 'r_factor') {
+                // R-Factor indicator
+                $totalCumulCost = $cumulativeCost + $costRecovery;
+                $rFactor = $totalCumulCost > 0 ? $cumulativeRevenue / $totalCumulCost : 0;
+                $indicator = $rFactor;
+            } else {
+                // Production-based indicator (bbl/day)
+                $indicator = $production ? (float) ($production->oil ?? 0) * $productionMult / 365 * 1000 : 0;
+            }
+
+            [$stateShare, $contractorShare] = $petroleumCode->getProfitOilSplit($profitOil, $indicator);
+
+            // PETROSEN share of contractor portion
             $petrosenProfitShare = $contractorShare * $petrosenParticipation;
             $operatorShare = $contractorShare * (1 - $petrosenParticipation);
 
-            // Add state participation (carried interest, if any)
+            // Carried interest
             $stateCarried = (float) $params->state_participation / 100 * $grossRevenue;
             $stateShare += $stateCarried;
 
-            // === 7. INCOME TAX (IS) ===
-            $taxableIncome = max(0, $operatorShare - $opexTotal);
-            $incomeTax = $taxableIncome * (float) $params->taux_is / 100;
+            // === 8. INCOME TAX (IS) ===
+            $taxableIncome = $operatorShare - $yearlyDepreciation;
+
+            // NOL carry-forward
+            $remainingNol = [];
+            foreach ($nolCarryForward as $nol) {
+                if ($y - $nol['year_created'] <= $nolYears && $taxableIncome > 0) {
+                    $deduct = min($nol['amount'], $taxableIncome);
+                    $taxableIncome -= $deduct;
+                    $nol['amount'] -= $deduct;
+                    if ($nol['amount'] > 0) {
+                        $remainingNol[] = $nol;
+                    }
+                } elseif ($y - $nol['year_created'] <= $nolYears) {
+                    $remainingNol[] = $nol;
+                }
+            }
+            $nolCarryForward = $remainingNol;
+
+            if ($taxableIncome < 0) {
+                $nolCarryForward[] = ['amount' => abs($taxableIncome), 'year_created' => $y];
+                $taxableIncome = 0;
+            }
+
+            $incomeTax = $taxableIncome * $isRate;
             $operatorNet = $operatorShare - $incomeTax;
 
-            // === 8. PETROSEN LOAN SERVICE ===
+            // === 9. WHT ON DIVIDENDS ===
+            $whtDividendes = max(0, $operatorNet) * $whtRate;
+
+            // === 10. PETROSEN LOAN SERVICE ===
             $petrosenInterest = 0;
             $petrosenPrincipal = 0;
             if ($petrosenLoanBalance > 0 && $y > $petrosenGrace) {
                 $petrosenInterest = $petrosenLoanBalance * $petrosenInterestRate;
+                if ($y == $petrosenGrace + 1 && $petrosenCapitalizedInterest > 0) {
+                    $petrosenLoanBalance += $petrosenCapitalizedInterest;
+                    $petrosenCapitalizedInterest = 0;
+                }
                 $amortYears = max(1, $petrosenMaturity - $petrosenGrace);
                 $petrosenPrincipal = $params->petrosen_loan_amount / $amortYears;
                 $petrosenPrincipal = min($petrosenPrincipal, $petrosenLoanBalance);
                 $petrosenLoanBalance -= $petrosenPrincipal;
             } elseif ($petrosenLoanBalance > 0) {
                 $petrosenInterest = $petrosenLoanBalance * $petrosenInterestRate;
+                $petrosenCapitalizedInterest += $petrosenInterest;
             }
 
-            // === 9. PROJECT CASHFLOW (Operator perspective) ===
-            $projectCashflow = $operatorNet - $capexTotal - $opexTotal * (1 - $petrosenParticipation);
+            // === 11. PROJECT CASHFLOW ===
+            $projectCashflow = $operatorNet - $whtDividendes - $capexTotal - $opexTotal * (1 - $petrosenParticipation);
 
-            // === 10. DISCOUNTED CASHFLOW ===
+            // === 12. DISCOUNTED CASHFLOW ===
             $discountFactor = 1 / pow(1 + $discountRate, $y);
             $discountedCashflow = $projectCashflow * $discountFactor;
             $npv += $discountedCashflow;
-
-            $cumulativeRevenue += $grossRevenue;
 
             $yearlyCashflows[$y] = [
                 'year' => $y,
@@ -164,6 +246,9 @@ class EconomicModelService
                 'income_tax' => round($incomeTax, 2),
                 'cel' => round($celTax, 2),
                 'export_tax' => round($exportTax, 2),
+                'wht_dividendes' => round($whtDividendes, 2),
+                'business_license_tax' => round($businessLicenseTax, 2),
+                'depreciation' => round($yearlyDepreciation, 2),
                 'capex_total' => round($capexTotal, 2),
                 'opex_total' => round($opexTotal, 2),
                 'project_cashflow' => round($projectCashflow, 2),
@@ -188,7 +273,9 @@ class EconomicModelService
                     array_sum(array_column($yearlyCashflows, 'income_tax')) +
                     array_sum(array_column($yearlyCashflows, 'cel')) +
                     array_sum(array_column($yearlyCashflows, 'export_tax')) +
-                    array_sum(array_column($yearlyCashflows, 'royalties')),
+                    array_sum(array_column($yearlyCashflows, 'royalties')) +
+                    array_sum(array_column($yearlyCashflows, 'wht_dividendes')) +
+                    array_sum(array_column($yearlyCashflows, 'business_license_tax')),
                     2
                 ),
             ],
@@ -196,15 +283,11 @@ class EconomicModelService
         ];
     }
 
-    /**
-     * Save simulation results to the database.
-     */
     public function saveSimulation(Project $project, array $results, string $scenario = 'base'): void
     {
-        // Clear old results for this scenario
         $project->cashflows()->where('scenario', $scenario)->delete();
 
-        foreach ($results['yearly'] as $year => $data) {
+        foreach ($results['yearly'] as $data) {
             Cashflow::create(array_merge($data, [
                 'project_id' => $project->id,
                 'scenario' => $scenario,
@@ -212,9 +295,6 @@ class EconomicModelService
         }
     }
 
-    /**
-     * Run multiple scenario simulations.
-     */
     public function runMultiScenario(Project $project): array
     {
         return [
@@ -226,38 +306,10 @@ class EconomicModelService
         ];
     }
 
-    /**
-     * Public accessor for IRR calculation (used by DashboardController).
-     */
     public function getIRR(array $cashflows): ?float
     {
         $irr = $this->calculateIRR($cashflows);
         return $irr !== null ? round($irr * 100, 2) : null;
-    }
-
-    // ----------------------------------------------------------------
-    //  PRIVATE HELPERS
-    // ----------------------------------------------------------------
-
-    private function getProfitOilSplit(float $profitOil, string $code, ?float $rFactor): array
-    {
-        $tranches = $code === '2019'
-            ? self::R_FACTOR_TRANCHES_2019
-            : self::FIXED_TRANCHES_1998;
-
-        $r = $rFactor ?? 0;
-
-        foreach ($tranches as $tranche) {
-            if ($r < $tranche['max']) {
-                return [
-                    $profitOil * $tranche['state'],
-                    $profitOil * $tranche['contractors'],
-                ];
-            }
-        }
-
-        // Default fallback
-        return [$profitOil * 0.50, $profitOil * 0.50];
     }
 
     private function calculateNPV(array $cashflows, float $rate): float
@@ -269,15 +321,10 @@ class EconomicModelService
         return $npv;
     }
 
-    /**
-     * Calculate IRR using bisection method.
-     * Returns null if no real IRR exists.
-     */
     private function calculateIRR(array $cashflows, float $tolerance = 0.0001, int $maxIter = 1000): ?float
     {
         $low = -0.99;
         $high = 10.0;
-
         $npvAtLow = $this->calculateNPV($cashflows, $low);
 
         for ($i = 0; $i < $maxIter; $i++) {
@@ -296,6 +343,6 @@ class EconomicModelService
             }
         }
 
-        return null; // No convergence
+        return null;
     }
 }

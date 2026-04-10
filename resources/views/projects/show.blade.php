@@ -7,7 +7,7 @@
             <div>
                 <h1 class="fw-bold mb-0" style="font-size: 1.35rem; letter-spacing: -0.02em;">{{ $project->name }}</h1>
                 <p class="mb-0 mt-1" style="font-size: 0.8rem; color: var(--text-muted);">
-                    {{ ucfirst($project->type) }} &middot; Code {{ $project->code_petrolier }} &middot; {{ $project->duration }} ans
+                    {{ ucfirst($project->type) }} &middot; {{ $project->petroleumCode?->name ?? 'Code ' . $project->code_petrolier }} &middot; {{ $project->duration }} ans
                 </p>
             </div>
         </div>
@@ -85,6 +85,16 @@
                                 <input type="number" step="0.01" name="inputs[0][taxe_export]" value="{{ $project->parameter->taxe_export }}"
                                     class="form-control form-modern">
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">WHT Dividendes %</label>
+                                <input type="number" step="0.01" name="inputs[0][wht_dividendes]" value="{{ $project->parameter->wht_dividendes }}"
+                                    class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Business License Tax %</label>
+                                <input type="number" step="0.0001" name="inputs[0][business_license_tax]" value="{{ $project->parameter->business_license_tax }}"
+                                    class="form-control form-modern">
+                            </div>
                         </div>
 
                         <!-- Contrat -->
@@ -106,6 +116,15 @@
                                 <label class="form-label-modern">Plafond Cost Recovery %</label>
                                 <input type="number" step="0.01" name="inputs[0][cost_recovery_ceiling]" value="{{ $project->parameter->cost_recovery_ceiling }}"
                                     class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Type de Bloc</label>
+                                <select name="inputs[0][bloc_type]" class="form-control form-modern">
+                                    <option value="onshore" {{ $project->parameter->bloc_type === 'onshore' ? 'selected' : '' }}>Onshore</option>
+                                    <option value="offshore_peu_profond" {{ $project->parameter->bloc_type === 'offshore_peu_profond' ? 'selected' : '' }}>Offshore Peu Profond</option>
+                                    <option value="offshore_profond" {{ $project->parameter->bloc_type === 'offshore_profond' ? 'selected' : '' }}>Offshore Profond</option>
+                                    <option value="offshore_ultra_profond" {{ $project->parameter->bloc_type === 'offshore_ultra_profond' ? 'selected' : '' }}>Offshore Ultra Profond</option>
+                                </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label-modern">Bonus Signature ($)</label>
@@ -139,6 +158,35 @@
                                 <input type="number" step="0.01" name="inputs[0][taxe_carbone]" value="{{ $project->parameter->taxe_carbone }}"
                                     class="form-control form-modern">
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Depreciation & NOL Section -->
+                    <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); background: var(--surface-secondary);">
+                        <h6 class="fw-bold mb-0" style="font-size: 0.85rem;">
+                            <i class="bi bi-calculator me-2" style="color: var(--info);"></i> Amortissement & Report de Pertes
+                        </h6>
+                    </div>
+                    <div class="row" style="padding: 1.5rem;">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Amort. Exploration (ans)</label>
+                            <input type="number" name="inputs[0][depreciation_exploration]" value="{{ $project->parameter->depreciation_exploration ?? 1 }}"
+                                class="form-control form-modern">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Amort. Installations (ans)</label>
+                            <input type="number" name="inputs[0][depreciation_installations]" value="{{ $project->parameter->depreciation_installations ?? 5 }}"
+                                class="form-control form-modern">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Amort. Pipeline/FPSO (ans)</label>
+                            <input type="number" name="inputs[0][depreciation_pipeline_fpso]" value="{{ $project->parameter->depreciation_pipeline_fpso ?? 10 }}"
+                                class="form-control form-modern">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Report pertes NOL (ans)</label>
+                            <input type="number" name="inputs[0][nol_years]" value="{{ $project->parameter->nol_years ?? 3 }}"
+                                class="form-control form-modern">
                         </div>
                     </div>
 

@@ -10,12 +10,17 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Project extends Model
 {
     protected $fillable = [
-        'user_id', 'name', 'code_petrolier', 'duration', 'type', 'description',
+        'user_id', 'name', 'code_petrolier', 'petroleum_code_id', 'duration', 'type', 'description',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function petroleumCode(): BelongsTo
+    {
+        return $this->belongsTo(PetroleumCode::class);
     }
 
     public function parameter(): HasOne

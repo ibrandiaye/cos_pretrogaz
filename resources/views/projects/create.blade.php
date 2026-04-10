@@ -42,12 +42,15 @@
 
                         <div class="col-md-6">
                             <label class="form-label-modern">Code Petrolier</label>
-                            <select name="code_petrolier" required class="form-select form-modern form-select-lg">
-                                <option value="2019" {{ old('code_petrolier') == '2019' ? 'selected' : '' }}>Code 2019 (R-Factor)</option>
-                                <option value="1998" {{ old('code_petrolier') == '1998' ? 'selected' : '' }}>Code 1998 (Tax/Tranches)</option>
+                            <select name="petroleum_code_id" required class="form-select form-modern form-select-lg">
+                                @foreach($petroleumCodes as $pc)
+                                    <option value="{{ $pc->id }}" {{ old('petroleum_code_id') == $pc->id ? 'selected' : '' }}>
+                                        {{ $pc->name }} ({{ $pc->profit_split_method === 'r_factor' ? 'R-Factor' : 'Production' }})
+                                    </option>
+                                @endforeach
                             </select>
                             <div class="mt-1" style="font-size: 0.75rem; color: var(--text-muted);">
-                                <i class="bi bi-info-circle me-1"></i> Le code 2019 utilise le mecanisme R-Factor progressif
+                                <i class="bi bi-info-circle me-1"></i> <a href="{{ route('petroleum-codes.create') }}" style="color: var(--accent);">Creer un nouveau code petrolier</a>
                             </div>
                         </div>
 

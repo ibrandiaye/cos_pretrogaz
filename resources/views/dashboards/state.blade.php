@@ -32,9 +32,11 @@
             $totalIS = $cashflows->sum('income_tax');
             $totalCEL = $cashflows->sum('cel');
             $totalExportTax = $cashflows->sum('export_tax');
+            $totalWHT = $cashflows->sum('wht_dividendes');
+            $totalBLT = $cashflows->sum('business_license_tax');
             $totalStateShare = $cashflows->sum('state_share');
             $totalPetrosenShare = $cashflows->sum('petrosen_share');
-            $grandTotal = $totalRoyalties + $totalIS + $totalCEL + $totalExportTax + $totalStateShare + $totalPetrosenShare;
+            $grandTotal = $totalRoyalties + $totalIS + $totalCEL + $totalExportTax + $totalWHT + $totalBLT + $totalStateShare + $totalPetrosenShare;
             $totalRevenue = $cashflows->sum('gross_revenue');
             $governmentTake = $totalRevenue > 0 ? ($grandTotal / $totalRevenue) * 100 : 0;
         @endphp
@@ -62,7 +64,7 @@
             <div class="col-md-3">
                 <div class="kpi-card kpi-red h-100">
                     <div class="kpi-label">Total Fiscalite</div>
-                    <div class="kpi-value" style="color: var(--danger);">{{ number_format($totalIS + $totalCEL + $totalExportTax, 1) }}<span class="kpi-unit">M$</span></div>
+                    <div class="kpi-value" style="color: var(--danger);">{{ number_format($totalIS + $totalCEL + $totalExportTax + $totalWHT + $totalBLT, 1) }}<span class="kpi-unit">M$</span></div>
                 </div>
             </div>
         </div>
@@ -84,6 +86,8 @@
                                 ['label' => 'Impot Societe (IS)', 'value' => $totalIS, 'color' => '#8b5cf6'],
                                 ['label' => 'CEL', 'value' => $totalCEL, 'color' => '#06b6d4'],
                                 ['label' => 'Taxe Export', 'value' => $totalExportTax, 'color' => '#ef4444'],
+                                ['label' => 'WHT Dividendes', 'value' => $totalWHT, 'color' => '#f97316'],
+                                ['label' => 'Business License Tax', 'value' => $totalBLT, 'color' => '#64748b'],
                             ];
                         @endphp
                         @foreach($items as $item)
@@ -126,12 +130,14 @@
                             <th class="text-end">IS</th>
                             <th class="text-end">CEL</th>
                             <th class="text-end">Taxe Export</th>
+                            <th class="text-end">WHT</th>
+                            <th class="text-end">BLT</th>
                             <th class="text-end">Total Etat</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($cashflows as $cf)
-                            @php $yearTotal = $cf->royalties + $cf->state_share + $cf->petrosen_share + $cf->income_tax + $cf->cel + $cf->export_tax; @endphp
+                            @php $yearTotal = $cf->royalties + $cf->state_share + $cf->petrosen_share + $cf->income_tax + $cf->cel + $cf->export_tax + $cf->wht_dividendes + $cf->business_license_tax; @endphp
                             <tr>
                                 <td><span class="badge-modern badge-blue">{{ $cf->year }}</span></td>
                                 <td class="text-end" style="color: var(--warning);">{{ number_format($cf->royalties, 1) }}</td>
@@ -140,6 +146,8 @@
                                 <td class="text-end" style="color: #7c3aed;">{{ number_format($cf->income_tax, 1) }}</td>
                                 <td class="text-end" style="color: var(--info);">{{ number_format($cf->cel, 1) }}</td>
                                 <td class="text-end" style="color: var(--danger);">{{ number_format($cf->export_tax, 1) }}</td>
+                                <td class="text-end" style="color: #f97316;">{{ number_format($cf->wht_dividendes, 1) }}</td>
+                                <td class="text-end" style="color: #64748b;">{{ number_format($cf->business_license_tax, 1) }}</td>
                                 <td class="text-end fw-bold">{{ number_format($yearTotal, 1) }}</td>
                             </tr>
                         @endforeach
@@ -153,6 +161,8 @@
                             <td class="text-end" style="color: #7c3aed;">{{ number_format($totalIS, 1) }}</td>
                             <td class="text-end" style="color: var(--info);">{{ number_format($totalCEL, 1) }}</td>
                             <td class="text-end" style="color: var(--danger);">{{ number_format($totalExportTax, 1) }}</td>
+                            <td class="text-end" style="color: #f97316;">{{ number_format($totalWHT, 1) }}</td>
+                            <td class="text-end" style="color: #64748b;">{{ number_format($totalBLT, 1) }}</td>
                             <td class="text-end fw-bold">{{ number_format($grandTotal, 1) }}</td>
                         </tr>
                     </tfoot>
@@ -171,10 +181,10 @@
         new Chart(document.getElementById('stateBreakdownChart'), {
             type: 'doughnut',
             data: {
-                labels: ['Redevances', 'Profit Oil Etat', 'PETROSEN', 'IS', 'CEL', 'Taxe Export'],
+                labels: ['Redevances', 'Profit Oil Etat', 'PETROSEN', 'IS', 'CEL', 'Taxe Export', 'WHT', 'BLT'],
                 datasets: [{
-                    data: [{{ $totalRoyalties }}, {{ $totalStateShare }}, {{ $totalPetrosenShare }}, {{ $totalIS }}, {{ $totalCEL }}, {{ $totalExportTax }}],
-                    backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#06b6d4', '#ef4444'],
+                    data: [{{ $totalRoyalties }}, {{ $totalStateShare }}, {{ $totalPetrosenShare }}, {{ $totalIS }}, {{ $totalCEL }}, {{ $totalExportTax }}, {{ $totalWHT }}, {{ $totalBLT }}],
+                    backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#06b6d4', '#ef4444', '#f97316', '#64748b'],
                     borderWidth: 0,
                     spacing: 2
                 }]

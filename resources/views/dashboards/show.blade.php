@@ -46,7 +46,7 @@
             $totalRevenue = $cashflows->sum('gross_revenue');
             $totalState = $cashflows->sum('state_share') + $cashflows->sum('petrosen_share');
             $totalOperator = $cashflows->sum('operator_share') - $cashflows->sum('income_tax');
-            $totalTaxes = $cashflows->sum('income_tax') + $cashflows->sum('royalties') + $cashflows->sum('cel') + $cashflows->sum('export_tax');
+            $totalTaxes = $cashflows->sum('income_tax') + $cashflows->sum('royalties') + $cashflows->sum('cel') + $cashflows->sum('export_tax') + $cashflows->sum('wht_dividendes') + $cashflows->sum('business_license_tax');
             $npvFinal = count($cumulativeNPV) > 0 ? end($cumulativeNPV) : 0;
             $totalCapex = $cashflows->sum('capex_total');
             $totalOpex = $cashflows->sum('opex_total');
