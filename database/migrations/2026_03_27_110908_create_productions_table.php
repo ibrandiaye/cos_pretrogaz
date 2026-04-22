@@ -12,9 +12,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->integer('year');
-            $table->decimal('oil', 15, 3)->default(0);     // Mbbl/year
-            $table->decimal('gas', 15, 3)->default(0);     // Bcf/year
-            $table->decimal('gnl', 15, 3)->default(0);     // MT LNG/year
+            // Inputs en taux journaliers (comme le fichier Excel)
+            $table->decimal('petrole_jour', 15, 4)->default(0);          // mbaril/jour
+            $table->decimal('gaz_domestique_jour', 15, 4)->default(0);   // mmscf/jour
+            $table->decimal('gnl_jour', 15, 4)->default(0);              // mmscf/jour
+            $table->decimal('gaz_combustible_pertes', 15, 4)->default(0); // mmscf/jour
             $table->timestamps();
         });
     }

@@ -34,9 +34,19 @@ class DashboardController extends Controller
             $irr = $economicService->getIRR($projectCashflows);
         }
 
+        // Totals for doughnut chart & KPIs
+        $totalState = round($cashflows->sum('state_share') + $cashflows->sum('royalties')
+                    + $cashflows->sum('petrosen_share'), 2);
+        $totalOperator = round($cashflows->sum('operator_share'), 2);
+        $totalTaxes = round($cashflows->sum('income_tax') + $cashflows->sum('cel')
+                    + $cashflows->sum('export_tax') + $cashflows->sum('wht_dividendes')
+                    + $cashflows->sum('business_license_tax'), 2);
+        $totalCapex = round($cashflows->sum('capex_total'), 2);
+
         return view('dashboards.show', compact(
             'project', 'cashflows', 'labels', 'revenues',
-            'netProfits', 'stateShare', 'petrosenShare', 'cumulativeNPV', 'irr'
+            'netProfits', 'stateShare', 'petrosenShare', 'cumulativeNPV', 'irr',
+            'totalState', 'totalOperator', 'totalTaxes', 'totalCapex'
         ));
     }
 

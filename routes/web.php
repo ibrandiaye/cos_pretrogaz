@@ -16,6 +16,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Petroleum Codes
+    Route::resource('petroleum-codes', \App\Http\Controllers\PetroleumCodeController::class);
+    Route::post('petroleum-codes/{petroleum_code}/duplicate', [\App\Http\Controllers\PetroleumCodeController::class, 'duplicate'])->name('petroleum-codes.duplicate');
+
     // Projects
     Route::resource('projects', \App\Http\Controllers\ProjectController::class);
     Route::post('projects/{project}/inputs', [\App\Http\Controllers\ProjectController::class, 'updateInputs'])->name('projects.update-inputs');
@@ -27,6 +31,11 @@ Route::middleware('auth')->group(function () {
     // Dashboards
     Route::get('projects/{project}/dashboard', [\App\Http\Controllers\DashboardController::class, 'show'])->name('dashboards.show');
     Route::get('projects/{project}/dashboard/state', [\App\Http\Controllers\DashboardController::class, 'state'])->name('dashboards.state');
+
+    // Exports
+    Route::get('projects/{project}/export/excel', [\App\Http\Controllers\ExportController::class, 'excel'])->name('exports.excel');
+    Route::get('projects/{project}/export/pdf', [\App\Http\Controllers\ExportController::class, 'pdf'])->name('exports.pdf');
+    Route::get('projects/{project}/export/state/{component}', [\App\Http\Controllers\ExportController::class, 'stateComponent'])->name('exports.state-component');
 });
 
 require __DIR__.'/auth.php';

@@ -22,6 +22,8 @@
 
         <style>
             :root {
+                --sidebar-width: 260px;
+                --sidebar-collapsed: 72px;
                 --primary: #0f172a;
                 --primary-light: #1e293b;
                 --accent: #3b82f6;
@@ -61,9 +63,11 @@
                 -moz-osx-font-smoothing: grayscale;
             }
 
-            /* ── Sidebar ── */
+            /* ══════════════════════════════════════════
+               SIDEBAR — Expanded & Collapsed
+               ══════════════════════════════════════════ */
             .sidebar {
-                width: 260px;
+                width: var(--sidebar-width);
                 height: 100vh;
                 position: fixed;
                 top: 0;
@@ -73,15 +77,21 @@
                 z-index: 1040;
                 display: flex;
                 flex-direction: column;
-                transition: transform 0.3s ease;
+                transition: width 0.25s cubic-bezier(.4,0,.2,1);
+                overflow: hidden;
             }
+
+            /* Collapsed state on desktop */
+            .sidebar.collapsed { width: var(--sidebar-collapsed); }
+
             .sidebar-brand {
-                padding: 1.5rem 1.25rem;
+                padding: 1.25rem;
                 border-bottom: 1px solid rgba(255,255,255,0.08);
                 display: flex;
                 align-items: center;
                 gap: 0.75rem;
                 text-decoration: none;
+                min-height: 68px;
             }
             .sidebar-brand-icon {
                 width: 36px;
@@ -95,45 +105,96 @@
             }
             .sidebar-brand-text {
                 font-weight: 800;
-                font-size: 1.1rem;
+                font-size: 1.05rem;
                 letter-spacing: -0.02em;
                 color: white;
+                white-space: nowrap;
+                overflow: hidden;
+                transition: opacity 0.2s ease;
             }
             .sidebar-brand-text span { color: var(--accent); }
-            .sidebar-nav { padding: 1rem 0.75rem; flex: 1; overflow-y: auto; }
+            .sidebar.collapsed .sidebar-brand-text { opacity: 0; width: 0; }
+
+            .sidebar-nav { padding: 0.75rem 0.5rem; flex: 1; overflow-y: auto; overflow-x: hidden; }
+
             .sidebar-section {
-                font-size: 0.65rem;
+                font-size: 0.6rem;
                 font-weight: 700;
                 text-transform: uppercase;
                 letter-spacing: 0.1em;
                 color: rgba(255,255,255,0.35);
                 padding: 0 0.75rem;
                 margin: 1.25rem 0 0.5rem;
+                white-space: nowrap;
+                overflow: hidden;
+                transition: opacity 0.2s ease;
             }
+            .sidebar.collapsed .sidebar-section { opacity: 0; height: 0; margin: 0; padding: 0; }
+
             .sidebar-link {
                 display: flex;
                 align-items: center;
                 gap: 0.75rem;
-                padding: 0.65rem 0.75rem;
+                padding: 0.6rem 0.75rem;
                 border-radius: var(--radius-md);
                 color: rgba(255,255,255,0.6);
                 text-decoration: none;
-                font-size: 0.875rem;
+                font-size: 0.85rem;
                 font-weight: 500;
                 transition: all 0.15s ease;
                 margin-bottom: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                position: relative;
             }
-            .sidebar-link:hover {
-                background: rgba(255,255,255,0.08);
+            .sidebar-link:hover { background: rgba(255,255,255,0.08); color: white; }
+            .sidebar-link.active { background: rgba(59,130,246,0.15); color: var(--accent); }
+            .sidebar-link i { font-size: 1.15rem; width: 20px; text-align: center; flex-shrink: 0; }
+            .sidebar-link .link-text { transition: opacity 0.2s ease; }
+            .sidebar.collapsed .sidebar-link .link-text { opacity: 0; }
+            .sidebar.collapsed .sidebar-link { justify-content: center; padding: 0.6rem; }
+
+            /* Tooltip on collapsed hover */
+            .sidebar.collapsed .sidebar-link[data-tooltip]:hover::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                left: calc(var(--sidebar-collapsed) - 8px);
+                top: 50%;
+                transform: translateY(-50%);
+                background: var(--primary-light);
                 color: white;
+                padding: 0.4rem 0.85rem;
+                border-radius: var(--radius-md);
+                font-size: 0.8rem;
+                font-weight: 600;
+                white-space: nowrap;
+                z-index: 1050;
+                box-shadow: var(--shadow-lg);
+                pointer-events: none;
             }
-            .sidebar-link.active {
-                background: rgba(59,130,246,0.15);
-                color: var(--accent);
+
+            /* Collapse toggle button */
+            .sidebar-collapse-btn {
+                background: none;
+                border: none;
+                color: rgba(255,255,255,0.4);
+                padding: 0.5rem;
+                cursor: pointer;
+                border-radius: var(--radius-md);
+                transition: all 0.15s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+                flex-shrink: 0;
             }
-            .sidebar-link i { font-size: 1.15rem; width: 20px; text-align: center; }
+            .sidebar-collapse-btn:hover { color: white; background: rgba(255,255,255,0.1); }
+            .sidebar-collapse-btn i { transition: transform 0.25s ease; font-size: 1.1rem; }
+            .sidebar.collapsed .sidebar-collapse-btn i { transform: rotate(180deg); }
+
             .sidebar-footer {
-                padding: 1rem 1.25rem;
+                padding: 0.75rem;
                 border-top: 1px solid rgba(255,255,255,0.08);
             }
             .sidebar-user {
@@ -145,6 +206,7 @@
                 text-decoration: none;
                 color: rgba(255,255,255,0.7);
                 transition: all 0.15s ease;
+                overflow: hidden;
             }
             .sidebar-user:hover { background: rgba(255,255,255,0.08); color: white; }
             .sidebar-avatar {
@@ -160,34 +222,122 @@
                 color: white;
                 flex-shrink: 0;
             }
+            .sidebar-user-info { white-space: nowrap; overflow: hidden; transition: opacity 0.2s ease; }
             .sidebar-user-name { font-size: 0.85rem; font-weight: 600; }
             .sidebar-user-email { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+            .sidebar.collapsed .sidebar-user-info { opacity: 0; width: 0; }
+            .sidebar.collapsed .sidebar-user { justify-content: center; }
 
-            /* ── Main Content ── */
+            /* ══════════════════════════════════════════
+               MAIN CONTENT
+               ══════════════════════════════════════════ */
             .main-wrapper {
-                margin-left: 260px;
+                margin-left: var(--sidebar-width);
                 min-height: 100vh;
                 display: flex;
                 flex-direction: column;
+                transition: margin-left 0.25s cubic-bezier(.4,0,.2,1);
             }
+            .sidebar.collapsed ~ .main-wrapper { margin-left: var(--sidebar-collapsed); }
 
-            /* ── Top Bar ── */
             .topbar {
                 background: var(--surface);
                 border-bottom: 1px solid var(--border);
-                padding: 1rem 2rem;
+                padding: 0.85rem 1.5rem;
                 position: sticky;
                 top: 0;
                 z-index: 1030;
             }
 
-            /* ── Content ── */
             .content-area {
-                padding: 1.5rem 2rem 3rem;
+                padding: 1.5rem;
                 flex: 1;
             }
 
-            /* ── Cards ── */
+            /* ── Mobile toggle button ── */
+            .sidebar-toggle {
+                display: none;
+                background: var(--primary);
+                border: none;
+                color: white;
+                padding: 0.45rem 0.6rem;
+                border-radius: var(--radius-sm);
+                font-size: 1.2rem;
+                cursor: pointer;
+                line-height: 1;
+            }
+
+            /* ══════════════════════════════════════════
+               RESPONSIVE
+               ══════════════════════════════════════════ */
+
+            /* Tablet: auto-collapse sidebar */
+            @media (max-width: 1199.98px) and (min-width: 992px) {
+                .sidebar:not(.expanded-hover) { width: var(--sidebar-collapsed); }
+                .sidebar:not(.expanded-hover) .sidebar-brand-text { opacity: 0; width: 0; }
+                .sidebar:not(.expanded-hover) .sidebar-section { opacity: 0; height: 0; margin: 0; padding: 0; }
+                .sidebar:not(.expanded-hover) .sidebar-link .link-text { opacity: 0; }
+                .sidebar:not(.expanded-hover) .sidebar-link { justify-content: center; padding: 0.6rem; }
+                .sidebar:not(.expanded-hover) .sidebar-user-info { opacity: 0; width: 0; }
+                .sidebar:not(.expanded-hover) .sidebar-user { justify-content: center; }
+                .main-wrapper { margin-left: var(--sidebar-collapsed); }
+                .sidebar.collapsed ~ .main-wrapper { margin-left: var(--sidebar-collapsed); }
+            }
+
+            /* Mobile: sidebar is overlay */
+            @media (max-width: 991.98px) {
+                .sidebar {
+                    width: var(--sidebar-width) !important;
+                    transform: translateX(-100%);
+                }
+                .sidebar.mobile-open { transform: translateX(0); }
+                .sidebar .sidebar-brand-text { opacity: 1 !important; width: auto !important; }
+                .sidebar .sidebar-section { opacity: 1 !important; height: auto !important; margin: 1.25rem 0 0.5rem !important; padding: 0 0.75rem !important; }
+                .sidebar .sidebar-link .link-text { opacity: 1 !important; }
+                .sidebar .sidebar-link { justify-content: flex-start !important; padding: 0.6rem 0.75rem !important; }
+                .sidebar .sidebar-user-info { opacity: 1 !important; width: auto !important; }
+                .sidebar .sidebar-user { justify-content: flex-start !important; }
+                .sidebar-collapse-btn { display: none !important; }
+
+                .main-wrapper { margin-left: 0 !important; }
+                .sidebar-toggle { display: inline-flex; }
+
+                .sidebar-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0,0,0,0.5);
+                    z-index: 1035;
+                    display: none;
+                    backdrop-filter: blur(2px);
+                }
+                .sidebar-overlay.show { display: block; }
+
+                .content-area { padding: 1rem; }
+                .topbar { padding: 0.65rem 1rem; }
+            }
+
+            /* Small mobile */
+            @media (max-width: 575.98px) {
+                .content-area { padding: 0.75rem; }
+                .topbar { padding: 0.5rem 0.75rem; }
+                .topbar .d-flex.align-items-center.gap-2 { gap: 0.35rem !important; }
+                .topbar .btn { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+                .topbar h1 { font-size: 1.1rem !important; }
+                .topbar p { font-size: 0.7rem !important; }
+
+                .kpi-card { padding: 1rem; }
+                .kpi-value { font-size: 1.3rem; }
+                .kpi-icon { width: 32px; height: 32px; font-size: 0.95rem; }
+
+                .tab-nav { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+                .tab-btn { padding: 0.5rem 0.85rem; font-size: 0.78rem; }
+            }
+
+            /* ══════════════════════════════════════════
+               COMPONENTS
+               ══════════════════════════════════════════ */
+
+            /* Cards */
             .card-modern {
                 background: var(--surface);
                 border: 1px solid var(--border);
@@ -200,7 +350,7 @@
                 border-color: var(--border);
             }
 
-            /* ── Buttons ── */
+            /* Buttons */
             .btn-accent {
                 background: var(--accent-gradient);
                 border: none;
@@ -251,12 +401,12 @@
                 transform: translateY(-1px);
             }
 
-            /* ── KPI Cards ── */
+            /* KPI Cards */
             .kpi-card {
                 background: var(--surface);
                 border: 1px solid var(--border);
                 border-radius: var(--radius-xl);
-                padding: 1.5rem;
+                padding: 1.25rem;
                 position: relative;
                 overflow: hidden;
             }
@@ -304,11 +454,8 @@
                 font-size: 1.1rem;
             }
 
-            /* ── Tables ── */
-            .table-modern {
-                border-collapse: separate;
-                border-spacing: 0;
-            }
+            /* Tables */
+            .table-modern { border-collapse: separate; border-spacing: 0; }
             .table-modern thead th {
                 background: var(--surface-tertiary);
                 font-size: 0.7rem;
@@ -331,7 +478,7 @@
             .table-modern tbody tr:last-child td { border-bottom: none; }
             .table-modern tbody tr:hover td { background: var(--surface-secondary); }
 
-            /* ── Form Controls ── */
+            /* Forms */
             .form-modern {
                 background: var(--surface-secondary);
                 border: 1px solid var(--border);
@@ -357,7 +504,7 @@
                 letter-spacing: 0.04em;
             }
 
-            /* ── Tab Navigation ── */
+            /* Tabs */
             .tab-nav {
                 display: flex;
                 gap: 0.25rem;
@@ -385,7 +532,7 @@
                 box-shadow: var(--shadow-sm);
             }
 
-            /* ── Badges ── */
+            /* Badges */
             .badge-modern {
                 font-size: 0.7rem;
                 font-weight: 700;
@@ -398,7 +545,7 @@
             .badge-green { background: #d1fae5; color: #059669; }
             .badge-purple { background: #ede9fe; color: #7c3aed; }
 
-            /* ── Alert ── */
+            /* Alerts */
             .alert-modern {
                 border: none;
                 border-radius: var(--radius-lg);
@@ -409,54 +556,18 @@
                 align-items: center;
                 gap: 0.75rem;
             }
-            .alert-success-modern {
-                background: #ecfdf5;
-                color: #065f46;
-            }
-            .alert-error-modern {
-                background: #fef2f2;
-                color: #991b1b;
-            }
+            .alert-success-modern { background: #ecfdf5; color: #065f46; }
+            .alert-error-modern { background: #fef2f2; color: #991b1b; }
 
-            /* ── Responsive ── */
-            .sidebar-toggle {
-                display: none;
-                background: var(--primary);
-                border: none;
-                color: white;
-                padding: 0.5rem;
-                border-radius: var(--radius-sm);
-                font-size: 1.25rem;
-                cursor: pointer;
-            }
-            @media (max-width: 991.98px) {
-                .sidebar { transform: translateX(-100%); }
-                .sidebar.show { transform: translateX(0); }
-                .main-wrapper { margin-left: 0; }
-                .sidebar-toggle { display: inline-flex; }
-                .sidebar-overlay {
-                    position: fixed;
-                    inset: 0;
-                    background: rgba(0,0,0,0.5);
-                    z-index: 1035;
-                    display: none;
-                }
-                .sidebar-overlay.show { display: block; }
-                .content-area { padding: 1rem; }
-                .topbar { padding: 0.75rem 1rem; }
-            }
-
-            /* ── Animations ── */
+            /* Animations */
             @keyframes fadeInUp {
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
             }
-            .animate-in {
-                animation: fadeInUp 0.3s ease forwards;
-            }
+            .animate-in { animation: fadeInUp 0.3s ease forwards; }
 
-            /* ── Scrollbar ── */
-            ::-webkit-scrollbar { width: 6px; }
+            /* Scrollbar */
+            ::-webkit-scrollbar { width: 6px; height: 6px; }
             ::-webkit-scrollbar-track { background: transparent; }
             ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
             ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
@@ -464,42 +575,51 @@
     </head>
     <body>
         <!-- Sidebar Overlay (mobile) -->
-        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <!-- Sidebar -->
         <?php if(auth()->guard()->check()): ?>
         <aside class="sidebar" id="sidebar">
-            <a href="<?php echo e(route('projects.index')); ?>" class="sidebar-brand">
-                <div class="sidebar-brand-icon">
-                    <i class="bi bi-lightning-charge-fill text-white"></i>
-                </div>
-                <div class="sidebar-brand-text">COS-<span>PETROGAZ</span></div>
-            </a>
+            <div class="sidebar-brand">
+                <a href="<?php echo e(route('projects.index')); ?>" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; flex: 1; overflow: hidden;">
+                    <div class="sidebar-brand-icon">
+                        <i class="bi bi-lightning-charge-fill text-white"></i>
+                    </div>
+                    <div class="sidebar-brand-text">COS-<span>PETROGAZ</span></div>
+                </a>
+                <button class="sidebar-collapse-btn" id="collapseBtn" title="Reduire le menu">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+            </div>
 
             <nav class="sidebar-nav">
                 <div class="sidebar-section">Navigation</div>
-                <a href="<?php echo e(route('projects.index')); ?>" class="sidebar-link <?php echo e(request()->routeIs('projects.index') ? 'active' : ''); ?>">
+                <a href="<?php echo e(route('projects.index')); ?>" class="sidebar-link <?php echo e(request()->routeIs('projects.index') ? 'active' : ''); ?>" data-tooltip="Mes Projets">
                     <i class="bi bi-grid-1x2-fill"></i>
-                    <span>Mes Projets</span>
+                    <span class="link-text">Mes Projets</span>
                 </a>
-                <a href="<?php echo e(route('projects.create')); ?>" class="sidebar-link <?php echo e(request()->routeIs('projects.create') ? 'active' : ''); ?>">
+                <a href="<?php echo e(route('projects.create')); ?>" class="sidebar-link <?php echo e(request()->routeIs('projects.create') ? 'active' : ''); ?>" data-tooltip="Nouveau Projet">
                     <i class="bi bi-plus-circle"></i>
-                    <span>Nouveau Projet</span>
+                    <span class="link-text">Nouveau Projet</span>
+                </a>
+                <a href="<?php echo e(route('petroleum-codes.index')); ?>" class="sidebar-link <?php echo e(request()->routeIs('petroleum-codes.*') ? 'active' : ''); ?>" data-tooltip="Codes Petroliers">
+                    <i class="bi bi-journal-code"></i>
+                    <span class="link-text">Codes Petroliers</span>
                 </a>
 
                 <div class="sidebar-section">Outils</div>
                 <?php if(isset($project)): ?>
-                <a href="<?php echo e(route('projects.show', $project)); ?>" class="sidebar-link <?php echo e(request()->routeIs('projects.show') ? 'active' : ''); ?>">
+                <a href="<?php echo e(route('projects.show', $project)); ?>" class="sidebar-link <?php echo e(request()->routeIs('projects.show') ? 'active' : ''); ?>" data-tooltip="Parametres">
                     <i class="bi bi-sliders"></i>
-                    <span>Parametres</span>
+                    <span class="link-text">Parametres</span>
                 </a>
-                <a href="<?php echo e(route('dashboards.show', $project)); ?>" class="sidebar-link <?php echo e(request()->routeIs('dashboards.show') ? 'active' : ''); ?>">
+                <a href="<?php echo e(route('dashboards.show', $project)); ?>" class="sidebar-link <?php echo e(request()->routeIs('dashboards.show') ? 'active' : ''); ?>" data-tooltip="Analytics">
                     <i class="bi bi-bar-chart-line-fill"></i>
-                    <span>Analytics</span>
+                    <span class="link-text">Analytics</span>
                 </a>
-                <a href="<?php echo e(route('dashboards.state', $project)); ?>" class="sidebar-link <?php echo e(request()->routeIs('dashboards.state') ? 'active' : ''); ?>">
+                <a href="<?php echo e(route('dashboards.state', $project)); ?>" class="sidebar-link <?php echo e(request()->routeIs('dashboards.state') ? 'active' : ''); ?>" data-tooltip="Vue Etatique">
                     <i class="bi bi-bank2"></i>
-                    <span>Vue Etatique</span>
+                    <span class="link-text">Vue Etatique</span>
                 </a>
                 <?php endif; ?>
             </nav>
@@ -508,7 +628,7 @@
                 <div class="dropdown">
                     <a href="#" class="sidebar-user" data-bs-toggle="dropdown">
                         <div class="sidebar-avatar"><?php echo e(strtoupper(substr(Auth::user()->name, 0, 2))); ?></div>
-                        <div>
+                        <div class="sidebar-user-info">
                             <div class="sidebar-user-name"><?php echo e(Auth::user()->name); ?></div>
                             <div class="sidebar-user-email"><?php echo e(Auth::user()->email); ?></div>
                         </div>
@@ -532,18 +652,17 @@
         <div class="main-wrapper">
             <!-- Top Bar -->
             <div class="topbar">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-3">
-                        <button class="sidebar-toggle" onclick="toggleSidebar()">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                        <button class="sidebar-toggle" id="mobileToggle">
                             <i class="bi bi-list"></i>
                         </button>
                         <?php if(isset($header)): ?>
-                            <?php echo e($header); ?>
-
+                            <div class="min-w-0"><?php echo e($header); ?></div>
                         <?php endif; ?>
                     </div>
                     <?php if(isset($actions)): ?>
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
                             <?php echo e($actions); ?>
 
                         </div>
@@ -575,10 +694,69 @@
         <!-- Bootstrap 5 JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            function toggleSidebar() {
-                document.getElementById('sidebar').classList.toggle('show');
-                document.getElementById('sidebarOverlay').classList.toggle('show');
+        (function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const collapseBtn = document.getElementById('collapseBtn');
+            const mobileToggle = document.getElementById('mobileToggle');
+            if (!sidebar) return;
+
+            const STORAGE_KEY = 'cos_sidebar_collapsed';
+            const isMobile = () => window.innerWidth < 992;
+
+            // Restore collapsed state on desktop
+            if (!isMobile() && localStorage.getItem(STORAGE_KEY) === '1') {
+                sidebar.classList.add('collapsed');
             }
+
+            // Desktop: collapse / expand
+            if (collapseBtn) {
+                collapseBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    localStorage.setItem(STORAGE_KEY, sidebar.classList.contains('collapsed') ? '1' : '0');
+                });
+            }
+
+            // Mobile: open / close
+            function openMobile() {
+                sidebar.classList.add('mobile-open');
+                overlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeMobile() {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', function() {
+                    if (sidebar.classList.contains('mobile-open')) {
+                        closeMobile();
+                    } else {
+                        openMobile();
+                    }
+                });
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeMobile);
+            }
+
+            // Close mobile sidebar on link click
+            sidebar.querySelectorAll('.sidebar-link').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (isMobile()) closeMobile();
+                });
+            });
+
+            // On resize: clean up mobile state
+            window.addEventListener('resize', function() {
+                if (!isMobile()) {
+                    closeMobile();
+                }
+            });
+        })();
         </script>
         <?php echo $__env->yieldPushContent('scripts'); ?>
     </body>

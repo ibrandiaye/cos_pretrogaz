@@ -7,7 +7,7 @@
             <div>
                 <h1 class="fw-bold mb-0" style="font-size: 1.35rem; letter-spacing: -0.02em;">{{ $project->name }}</h1>
                 <p class="mb-0 mt-1" style="font-size: 0.8rem; color: var(--text-muted);">
-                    {{ ucfirst($project->type) }} &middot; Code {{ $project->code_petrolier }} &middot; {{ $project->duration }} ans
+                    {{ ucfirst($project->type) }} &middot; {{ $project->petroleumCode?->name ?? 'Code ' . $project->code_petrolier }} &middot; {{ $project->duration }} ans
                 </p>
             </div>
         </div>
@@ -49,11 +49,10 @@
         </div>
 
         <div class="card-modern overflow-hidden">
-            <form action="{{ route('projects.update-inputs', $project) }}" method="POST">
-                @csrf
-
                 <!-- PARAMS TAB -->
                 <div x-show="tab === 'params'" x-transition>
+                    <form action="{{ route('projects.update-inputs', $project) }}" method="POST">
+                    @csrf
                     <input type="hidden" name="type" value="parameters">
 
                     <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface-secondary);">
@@ -88,6 +87,16 @@
                                 <input type="number" step="0.01" name="inputs[0][taxe_export]" value="{{ $project->parameter->taxe_export }}"
                                     class="form-control form-modern">
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">WHT Dividendes %</label>
+                                <input type="number" step="0.01" name="inputs[0][wht_dividendes]" value="{{ $project->parameter->wht_dividendes }}"
+                                    class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Business License Tax %</label>
+                                <input type="number" step="0.0001" name="inputs[0][business_license_tax]" value="{{ $project->parameter->business_license_tax }}"
+                                    class="form-control form-modern">
+                            </div>
                         </div>
 
                         <!-- Contrat -->
@@ -109,6 +118,15 @@
                                 <label class="form-label-modern">Plafond Cost Recovery %</label>
                                 <input type="number" step="0.01" name="inputs[0][cost_recovery_ceiling]" value="{{ $project->parameter->cost_recovery_ceiling }}"
                                     class="form-control form-modern">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-modern">Type de Bloc</label>
+                                <select name="inputs[0][bloc_type]" class="form-control form-modern">
+                                    <option value="onshore" {{ $project->parameter->bloc_type === 'onshore' ? 'selected' : '' }}>Onshore</option>
+                                    <option value="offshore_peu_profond" {{ $project->parameter->bloc_type === 'offshore_peu_profond' ? 'selected' : '' }}>Offshore Peu Profond</option>
+                                    <option value="offshore_profond" {{ $project->parameter->bloc_type === 'offshore_profond' ? 'selected' : '' }}>Offshore Profond</option>
+                                    <option value="offshore_ultra_profond" {{ $project->parameter->bloc_type === 'offshore_ultra_profond' ? 'selected' : '' }}>Offshore Ultra Profond</option>
+                                </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label-modern">Bonus Signature ($)</label>
@@ -145,6 +163,35 @@
                         </div>
                     </div>
 
+                    <!-- Depreciation & NOL Section -->
+                    <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); background: var(--surface-secondary);">
+                        <h6 class="fw-bold mb-0" style="font-size: 0.85rem;">
+                            <i class="bi bi-calculator me-2" style="color: var(--info);"></i> Amortissement & Report de Pertes
+                        </h6>
+                    </div>
+                    <div class="row" style="padding: 1.5rem;">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Amort. Exploration (ans)</label>
+                            <input type="number" name="inputs[0][depreciation_exploration]" value="{{ $project->parameter->depreciation_exploration ?? 1 }}"
+                                class="form-control form-modern">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Amort. Installations (ans)</label>
+                            <input type="number" name="inputs[0][depreciation_installations]" value="{{ $project->parameter->depreciation_installations ?? 5 }}"
+                                class="form-control form-modern">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Amort. Pipeline/FPSO (ans)</label>
+                            <input type="number" name="inputs[0][depreciation_pipeline_fpso]" value="{{ $project->parameter->depreciation_pipeline_fpso ?? 10 }}"
+                                class="form-control form-modern">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-modern">Report pertes NOL (ans)</label>
+                            <input type="number" name="inputs[0][nol_years]" value="{{ $project->parameter->nol_years ?? 3 }}"
+                                class="form-control form-modern">
+                        </div>
+                    </div>
+
                     <!-- PETROSEN Loan Section -->
                     <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); background: var(--surface-secondary);">
                         <h6 class="fw-bold mb-0" style="font-size: 0.85rem;">
@@ -173,6 +220,17 @@
                                 class="form-control form-modern">
                         </div>
                     </div>
+
+                    <!-- Footer Params -->
+                    <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); background: var(--surface-secondary);" class="d-flex justify-content-between align-items-center">
+                        <p class="mb-0" style="font-size: 0.8rem; color: var(--text-muted);">
+                            <i class="bi bi-info-circle me-1"></i> Sauvegardez puis lancez la simulation pour actualiser les calculs
+                        </p>
+                        <button type="submit" class="btn btn-accent">
+                            <i class="bi bi-check-lg me-1"></i> Sauvegarder
+                        </button>
+                    </div>
+                    </form>
                 </div>
 
                 <!-- DYNAMIC DATA TABS -->
@@ -183,6 +241,7 @@
                             'icon' => 'bi-building',
                             'color' => 'var(--accent)',
                             'collection' => 'capexes',
+                            'has_inflation' => true,
                             'fields' => [
                                 'exploration' => ['label' => 'Exploration (M$)', 'step' => '0.01'],
                                 'etudes_pre_fid' => ['label' => 'Etudes Pre-FID (M$)', 'step' => '0.01'],
@@ -199,6 +258,7 @@
                             'icon' => 'bi-tools',
                             'color' => 'var(--success)',
                             'collection' => 'opexes',
+                            'has_inflation' => true,
                             'fields' => [
                                 'location_flng' => ['label' => 'Location FLNG (M$)', 'step' => '0.01'],
                                 'location_fpso' => ['label' => 'Location FPSO (M$)', 'step' => '0.01'],
@@ -212,6 +272,7 @@
                             'icon' => 'bi-x-octagon',
                             'color' => '#dc3545',
                             'collection' => 'abexes',
+                            'has_inflation' => true,
                             'fields' => [
                                 'cout_abandon' => ['label' => 'Cout Abandon (M$)', 'step' => '0.01'],
                             ]
@@ -221,10 +282,12 @@
                             'icon' => 'bi-droplet-half',
                             'color' => 'var(--warning)',
                             'collection' => 'productions',
+                            'has_production_computed' => true,
                             'fields' => [
-                                'oil' => ['label' => 'Petrole (Mbbl)', 'step' => '0.001'],
-                                'gas' => ['label' => 'Gaz (Bcf)', 'step' => '0.001'],
-                                'gnl' => ['label' => 'GNL (MT)', 'step' => '0.001'],
+                                'petrole_jour' => ['label' => 'Petrole (mbbl/j)', 'step' => '0.0001'],
+                                'gaz_domestique_jour' => ['label' => 'Gaz Dom. (mmscf/j)', 'step' => '0.0001'],
+                                'gnl_jour' => ['label' => 'GNL (mmscf/j)', 'step' => '0.0001'],
+                                'gaz_combustible_pertes' => ['label' => 'Gaz Comb./Pertes (mmscf/j)', 'step' => '0.0001'],
                             ]
                         ],
                         'prices' => [
@@ -244,7 +307,54 @@
                 @endphp
 
                 @foreach($tabConfigs as $tabKey => $config)
+                @php
+                    $hasInflation = !empty($config['has_inflation']);
+                    $hasProdComputed = !empty($config['has_production_computed']);
+                    $fieldKeys = array_keys($config['fields']);
+                    // Build initial data for Alpine
+                    $rowsInit = [];
+                    for ($y = 1; $y <= $project->duration; $y++) {
+                        $item = $project->{$config['collection']}->firstWhere('year', $y);
+                        $priceRow = $project->prices->firstWhere('year', $y);
+                        $row = ['year' => $y, 'rate' => $priceRow ? (float) $priceRow->inflation / 100 : 0];
+                        foreach ($fieldKeys as $f) {
+                            $row[$f] = $item ? (float) $item->$f : 0;
+                        }
+                        $rowsInit[] = $row;
+                    }
+                @endphp
                 <div x-show="tab === '{{ $tabKey }}'" x-transition>
+                    <form action="{{ route('projects.update-inputs', $project) }}" method="POST"
+                          x-data="{
+                              rows: {{ json_encode($rowsInit) }},
+                              fields: {{ json_encode($fieldKeys) }},
+                              hasInflation: {{ $hasInflation ? 'true' : 'false' }},
+                              hasProd: {{ $hasProdComputed ? 'true' : 'false' }},
+                              // Constantes de conversion (Excel)
+                              BOE: 5.8, LNG_CONV: 142.008197, GAS_LNG: 1006.873, GAS_DOM: 1065,
+                              // Inflation computed
+                              rowTotal(i) {
+                                  let s = 0;
+                                  for (const f of this.fields) s += parseFloat(this.rows[i][f]) || 0;
+                                  return s;
+                              },
+                              rowInflation(i) { return this.rowTotal(i) * (this.rows[i].rate || 0); },
+                              rowTotalAvec(i) { return this.rowTotal(i) + this.rowInflation(i); },
+                              grandTotal() { let s=0; for(let i=0;i<this.rows.length;i++) s+=this.rowTotal(i); return s; },
+                              grandInflation() { let s=0; for(let i=0;i<this.rows.length;i++) s+=this.rowInflation(i); return s; },
+                              grandTotalAvec() { let s=0; for(let i=0;i<this.rows.length;i++) s+=this.rowTotalAvec(i); return s; },
+                              // Production computed
+                              petroleAn(i) { return (this.rows[i].petrole_jour||0) * 365 / 1000; },
+                              gazDomTbtu(i) { return (this.rows[i].gaz_domestique_jour||0) * 365 * this.GAS_DOM / 1e6; },
+                              gnlMtpa(i) { return (this.rows[i].gnl_jour||0) / this.LNG_CONV; },
+                              gnlTbtu(i) { return (this.rows[i].gnl_jour||0) * 365 * this.GAS_LNG / 1e6; },
+                              totalGazJour(i) { return (this.rows[i].gaz_domestique_jour||0) + (this.rows[i].gnl_jour||0) + (this.rows[i].gaz_combustible_pertes||0); },
+                              totalEquivPetrole(i) { return (this.rows[i].petrole_jour||0) + this.totalGazJour(i) / this.BOE; },
+                              totalEquivHorsPertes(i) { return (this.rows[i].petrole_jour||0) + ((this.rows[i].gaz_domestique_jour||0) + (this.rows[i].gnl_jour||0)) / this.BOE; },
+                              fmt(v) { return v.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
+                              fmt4(v) { return v.toLocaleString('fr-FR', {minimumFractionDigits: 4, maximumFractionDigits: 4}); }
+                          }">
+                    @csrf
                     <input type="hidden" name="type" value="{{ $tabKey === 'prod' ? 'production' : ($tabKey === 'prices' ? 'price' : $tabKey) }}">
 
                     <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface-secondary);">
@@ -258,45 +368,121 @@
                             <thead>
                                 <tr>
                                     <th style="width: 80px;">Annee</th>
+                                    @if($hasInflation)
+                                        <th class="text-end">Inflation (%)</th>
+                                    @endif
                                     @foreach($config['fields'] as $field => $fieldConfig)
                                         <th class="text-end">{{ $fieldConfig['label'] }}</th>
                                     @endforeach
+                                    @if($hasInflation)
+                                        <th class="text-end" style="background: var(--surface-secondary); font-weight: 700;">Total hors infl. (M$)</th>
+                                        <th class="text-end" style="background: var(--surface-secondary); font-weight: 700;">Inflation (M$)</th>
+                                        <th class="text-end" style="background: var(--surface-secondary); font-weight: 700;">Total avec infl. (M$)</th>
+                                    @endif
+                                    @if($hasProdComputed)
+                                        <th class="text-end" style="background: var(--surface-secondary); font-weight: 700;">Petrole (mmbbls/an)</th>
+                                        <th class="text-end" style="background: var(--surface-secondary); font-weight: 700;">Gaz Dom. (Tbtu/an)</th>
+                                        <th class="text-end" style="background: var(--surface-secondary); font-weight: 700;">GNL (MTPA)</th>
+                                        <th class="text-end" style="background: var(--surface-secondary); font-weight: 700;">GNL (Tbtu/an)</th>
+                                        <th class="text-end" style="background: var(--surface-secondary); font-weight: 700;">Total Gaz (mmscf/j)</th>
+                                        <th class="text-end" style="background: var(--surface-secondary); font-weight: 700;">Equiv. Petrole (mbbl/j)</th>
+                                        <th class="text-end" style="background: var(--surface-secondary); font-weight: 700;">Equiv. hors pertes (mbbl/j)</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
-                                @for($y = 1; $y <= $project->duration; $y++)
-                                    @php $item = $project->{$config['collection']}->firstWhere('year', $y); @endphp
+                                <template x-for="(row, i) in rows" :key="row.year">
                                     <tr>
                                         <td>
-                                            <span class="badge-modern badge-blue">{{ $y }}</span>
+                                            <span class="badge-modern badge-blue" x-text="row.year"></span>
                                         </td>
-                                        @foreach($config['fields'] as $field => $fieldConfig)
+                                        @if($hasInflation)
                                             <td class="text-end">
-                                                <input type="number" step="{{ $fieldConfig['step'] }}"
-                                                    name="inputs[{{ $y }}][{{ $field }}]"
-                                                    value="{{ $item->$field ?? 0 }}"
+                                                <span style="font-size: 0.85rem; color: var(--text-muted);" x-text="(row.rate * 100).toFixed(1) + '%'"></span>
+                                            </td>
+                                        @endif
+                                        @foreach($config['fields'] as $idx => $field)
+                                            @php $fieldName = $idx; @endphp
+                                            <td class="text-end">
+                                                <input type="number" step="{{ $field['step'] }}"
+                                                    x-model.number="row.{{ $fieldName }}"
+                                                    :name="'inputs[' + row.year + '][{{ $fieldName }}]'"
                                                     class="form-control form-modern text-end"
                                                     style="max-width: 140px; display: inline-block; padding: 0.4rem 0.6rem; font-size: 0.85rem;">
                                             </td>
                                         @endforeach
+                                        @if($hasInflation)
+                                            <td class="text-end" style="background: var(--surface-secondary);">
+                                                <strong style="font-size: 0.85rem;" x-text="fmt(rowTotal(i))"></strong>
+                                            </td>
+                                            <td class="text-end" style="background: var(--surface-secondary);">
+                                                <span style="font-size: 0.85rem; color: var(--text-muted);" x-text="fmt(rowInflation(i))"></span>
+                                            </td>
+                                            <td class="text-end" style="background: var(--surface-secondary);">
+                                                <strong style="font-size: 0.85rem; color: {{ $config['color'] }};" x-text="fmt(rowTotalAvec(i))"></strong>
+                                            </td>
+                                        @endif
+                                        @if($hasProdComputed)
+                                            <td class="text-end" style="background: var(--surface-secondary);">
+                                                <strong style="font-size: 0.85rem;" x-text="fmt4(petroleAn(i))"></strong>
+                                            </td>
+                                            <td class="text-end" style="background: var(--surface-secondary);">
+                                                <span style="font-size: 0.85rem;" x-text="fmt(gazDomTbtu(i))"></span>
+                                            </td>
+                                            <td class="text-end" style="background: var(--surface-secondary);">
+                                                <span style="font-size: 0.85rem;" x-text="fmt4(gnlMtpa(i))"></span>
+                                            </td>
+                                            <td class="text-end" style="background: var(--surface-secondary);">
+                                                <span style="font-size: 0.85rem;" x-text="fmt(gnlTbtu(i))"></span>
+                                            </td>
+                                            <td class="text-end" style="background: var(--surface-secondary);">
+                                                <strong style="font-size: 0.85rem; color: var(--warning);" x-text="fmt(totalGazJour(i))"></strong>
+                                            </td>
+                                            <td class="text-end" style="background: var(--surface-secondary);">
+                                                <strong style="font-size: 0.85rem; color: var(--accent);" x-text="fmt(totalEquivPetrole(i))"></strong>
+                                            </td>
+                                            <td class="text-end" style="background: var(--surface-secondary);">
+                                                <strong style="font-size: 0.85rem; color: var(--success);" x-text="fmt(totalEquivHorsPertes(i))"></strong>
+                                            </td>
+                                        @endif
                                     </tr>
-                                @endfor
+                                </template>
                             </tbody>
+                            @if($hasInflation)
+                                <tfoot>
+                                    <tr style="border-top: 2px solid var(--border); background: var(--surface-secondary);">
+                                        <td><strong>Total</strong></td>
+                                        <td></td>
+                                        @foreach($config['fields'] as $field => $fieldConfig)
+                                            <td></td>
+                                        @endforeach
+                                        <td class="text-end" style="background: var(--surface-secondary);">
+                                            <strong style="font-size: 0.9rem;" x-text="fmt(grandTotal())"></strong>
+                                        </td>
+                                        <td class="text-end" style="background: var(--surface-secondary);">
+                                            <strong style="font-size: 0.9rem; color: var(--text-muted);" x-text="fmt(grandInflation())"></strong>
+                                        </td>
+                                        <td class="text-end" style="background: var(--surface-secondary);">
+                                            <strong style="font-size: 0.9rem; color: {{ $config['color'] }};" x-text="fmt(grandTotalAvec())"></strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            @endif
                         </table>
                     </div>
+
+                    <!-- Footer -->
+                    <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); background: var(--surface-secondary);" class="d-flex justify-content-between align-items-center">
+                        <p class="mb-0" style="font-size: 0.8rem; color: var(--text-muted);">
+                            <i class="bi bi-info-circle me-1"></i> Sauvegardez puis lancez la simulation pour actualiser les calculs
+                        </p>
+                        <button type="submit" class="btn btn-accent">
+                            <i class="bi bi-check-lg me-1"></i> Sauvegarder
+                        </button>
+                    </div>
+                    </form>
                 </div>
                 @endforeach
-
-                <!-- Footer -->
-                <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); background: var(--surface-secondary);" class="d-flex justify-content-between align-items-center">
-                    <p class="mb-0" style="font-size: 0.8rem; color: var(--text-muted);">
-                        <i class="bi bi-info-circle me-1"></i> Sauvegardez puis lancez la simulation pour actualiser les calculs
-                    </p>
-                    <button type="submit" class="btn btn-accent">
-                        <i class="bi bi-check-lg me-1"></i> Sauvegarder
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </x-app-layout>

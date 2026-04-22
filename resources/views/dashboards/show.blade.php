@@ -17,6 +17,15 @@
         <a href="{{ route('dashboards.state', $project) }}" class="btn btn-ghost">
             <i class="bi bi-bank2 me-1"></i> Vue Etat
         </a>
+        <div class="dropdown d-inline">
+            <button class="btn btn-ghost dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-download me-1"></i> Exporter
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0">
+                <li><a class="dropdown-item fw-semibold" href="{{ route('exports.excel', $project) }}"><i class="bi bi-file-earmark-excel me-2 text-success"></i>Excel (.xlsx)</a></li>
+                <li><a class="dropdown-item fw-semibold" href="{{ route('exports.pdf', $project) }}"><i class="bi bi-file-earmark-pdf me-2 text-danger"></i>PDF</a></li>
+            </ul>
+        </div>
         <form action="{{ route('simulations.run', $project) }}" method="POST" class="d-inline">
             @csrf
             <button type="submit" class="btn btn-accent">
@@ -46,7 +55,7 @@
             $totalRevenue = $cashflows->sum('gross_revenue');
             $totalState = $cashflows->sum('state_share') + $cashflows->sum('petrosen_share');
             $totalOperator = $cashflows->sum('operator_share') - $cashflows->sum('income_tax');
-            $totalTaxes = $cashflows->sum('income_tax') + $cashflows->sum('royalties') + $cashflows->sum('cel') + $cashflows->sum('export_tax');
+            $totalTaxes = $cashflows->sum('income_tax') + $cashflows->sum('royalties') + $cashflows->sum('cel') + $cashflows->sum('export_tax') + $cashflows->sum('wht_dividendes') + $cashflows->sum('business_license_tax');
             $npvFinal = count($cumulativeNPV) > 0 ? end($cumulativeNPV) : 0;
             $totalCapex = $cashflows->sum('capex_total');
             $totalOpex = $cashflows->sum('opex_total');
@@ -128,7 +137,12 @@
                 <div class="card-modern p-4 h-100">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">Profil de Tresorerie Annuel</h6>
-                        <span class="badge-modern badge-blue">M$</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge-modern badge-blue">M$</span>
+                            <button onclick="exportChartPDF('cashflowChart', 'Profil_Tresorerie')" style="background: #fef2f2; color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.75rem;" title="Exporter en PDF">
+                                <i class="bi bi-filetype-pdf"></i>
+                            </button>
+                        </div>
                     </div>
                     <div style="height: 320px;">
                         <canvas id="cashflowChart"></canvas>
@@ -137,7 +151,12 @@
             </div>
             <div class="col-xl-4">
                 <div class="card-modern p-4 h-100">
-                    <h6 class="fw-bold mb-4" style="font-size: 0.9rem;">Repartition des Revenus</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">Repartition des Revenus</h6>
+                        <button onclick="exportChartPDF('distributionChart', 'Repartition_Revenus')" style="background: #fef2f2; color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.75rem;" title="Exporter en PDF">
+                            <i class="bi bi-filetype-pdf"></i>
+                        </button>
+                    </div>
                     <div class="d-flex align-items-center justify-content-center" style="height: 200px;">
                         <canvas id="distributionChart"></canvas>
                     </div>
@@ -172,9 +191,14 @@
         <div class="card-modern p-4 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">Evolution de la VAN Cumulative</h6>
-                <span class="badge-modern {{ $npvFinal >= 0 ? 'badge-green' : 'badge-amber' }}">
-                    {{ $npvFinal >= 0 ? 'Projet Rentable' : 'VAN Negative' }}
-                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge-modern {{ $npvFinal >= 0 ? 'badge-green' : 'badge-amber' }}">
+                        {{ $npvFinal >= 0 ? 'Projet Rentable' : 'VAN Negative' }}
+                    </span>
+                    <button onclick="exportChartPDF('npvChart', 'VAN_Cumulative')" style="background: #fef2f2; color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.75rem;" title="Exporter en PDF">
+                        <i class="bi bi-filetype-pdf"></i>
+                    </button>
+                </div>
             </div>
             <div style="height: 250px;">
                 <canvas id="npvChart"></canvas>
@@ -382,6 +406,48 @@
                 }
             }
         });
+    </script>
+    <script src="https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script>
+        function exportChartPDF(canvasId, title) {
+            try {
+                var canvas = document.getElementById(canvasId);
+                if (!canvas) { alert('Canvas introuvable'); return; }
+                if (!window.jspdf) { alert('Librairie PDF en cours de chargement, reessayez'); return; }
+                var imgData = canvas.toDataURL('image/png', 1.0);
+                var pdf = new window.jspdf.jsPDF('landscape', 'mm', 'a4');
+
+                pdf.setFillColor(10, 22, 40);
+                pdf.rect(0, 0, 297, 25, 'F');
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(8);
+                pdf.setTextColor(100, 255, 218);
+                pdf.text('COS-PETROGAZ', 15, 10);
+                pdf.setFontSize(14);
+                pdf.setTextColor(255, 255, 255);
+                pdf.text(title.replace(/_/g, ' '), 15, 18);
+                pdf.setFontSize(8);
+                pdf.setTextColor(150, 150, 170);
+                pdf.text('{{ $project->name }}', 200, 10);
+                pdf.text('{{ now()->format("d/m/Y H:i") }}', 200, 15);
+
+                var ratio = canvas.width / canvas.height;
+                var imgW = 260;
+                var imgH = imgW / ratio;
+                if (imgH > 155) { imgH = 155; imgW = imgH * ratio; }
+                var x = (297 - imgW) / 2;
+                pdf.addImage(imgData, 'PNG', x, 32, imgW, imgH);
+
+                pdf.setFontSize(7);
+                pdf.setTextColor(160, 174, 192);
+                pdf.text('COS-PETROGAZ - Rapport genere automatiquement', 148.5, 200, { align: 'center' });
+
+                pdf.save(title + '.pdf');
+            } catch(e) {
+                alert('Erreur: ' + e.message);
+                console.error(e);
+            }
+        }
     </script>
     @endpush
 </x-app-layout>
